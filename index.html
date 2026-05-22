@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
+    <title>项目施工影像归档系统</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:微软雅黑}
+        body{background:#fff;padding:20px}
+        .header{text-align:center;margin-bottom:10px}
+        h1{color:#333;font-size:22px}
+        .nav-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;padding:10px;background:#f8f9fa;border-radius:6px;border:1px solid #eee}
+        .nav-left{display:flex;align-items:center;gap:15px}
+        .nav-title{font-size:16px;font-weight:bold}
+        .nav-menu{display:flex;gap:10px}
+        .nav-menu button{padding:6px 12px;border:none;border-radius:4px;cursor:pointer;font-size:14px}
+        .nav-menu .active{background:#2980b9;color:#fff}
+        .account-info{font-size:14px}
+        .account-btn-group{display:flex;gap:10px}
+        .account-btn{padding:6px 12px;border:none;border-radius:4px;cursor:pointer;font-size:14px}
+        .login-btn{background:#2980b9;color:#fff}
+        .register-btn{background:#27ae60;color:#fff}
+        .logout-btn{background:#e74c3c;color:#fff}
+        .admin-btn{background:#9b59b6;color:#fff}
+        .project-info{background:#f8f9fa;padding:15px;border-radius:6px;margin-bottom:20px;border:1px solid #eee}
+        .info-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:10px}
+        .info-item label{font-size:13px;color:#666;display:block;margin-bottom:4px}
+        .info-item input{width:100%;padding:6px;border:1px #ddd solid;border-radius:4px}
+        .save-info-btn{padding:6px 15px;background:#2980b9;color:#fff;border:none;border-radius:4px;cursor:pointer}
+        .area-manage{margin-bottom:20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+        .area-manage label{font-size:14px}
+        .area-manage select{padding:6px;border:1px #ddd solid;border-radius:4px}
+        .area-manage button{padding:6px 15px;border:none;border-radius:4px;cursor:pointer;font-size:14px}
+        .add-area-btn{background:#e67e22;color:#fff}
+        .del-area-btn{background:#e74c3c;color:#fff}
+        .add-loc-btn{background:#27ae60;color:#fff}
+        .main-table{width:100%;border-collapse:collapse;margin-bottom:20px}
+        .main-table th,.main-table td{border:1px solid #333;padding:8px;text-align:center;vertical-align:middle}
+        .main-table th{background:#f8f9fa;font-weight:bold;font-size:14px}
+        .main-table td{font-size:14px}
+        .area-cell{font-weight:bold;color:#333}
+        .upload-cell{min-width:160px;height:120px}
+        .upload-btn{padding:5px 10px;background:#fff;border:1px dashed #999;border-radius:4px;cursor:pointer;color:#666;margin-bottom:6px;font-size:13px;display:inline-block}
+        .upload-btn:hover{border-color:#2980b9;color:#2980b9}
+        .img-preview{max-width:100%;max-height:80px;object-fit:cover;border-radius:4px;margin-top:5px}
+        .file-input{display:none}
+        .loc-op-cell{width:80px}
+        .del-loc-btn{padding:4px 8px;background:#e74c3c;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px}
+        .add-row-btn{width:100%;padding:10px;background:#f8f9fa;border:1px dashed #999;border-radius:4px;cursor:pointer;font-size:14px}
+        .add-row-btn:hover{background:#f0f0f0}
+        .export-area{margin-bottom:20px;text-align:center}
+        .export-filter{display:flex;gap:10px;align-items:center;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+        .export-filter label{font-size:14px}
+        .export-filter select{padding:6px;border:1px #ddd solid;border-radius:4px;min-width:150px}
+        .export-btn{padding:8px 18px;background:#e67e22;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:14px;margin:0 5px}
+        .login-mask{position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;z-index:9998;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px}
+        .login-mask h2{color:#333}
+        .mask-btn-group{display:flex;gap:15px}
+        .mask-btn{padding:10px 20px;border:none;border-radius:6px;cursor:pointer;font-size:16px}
+        .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:9999}
+        .modal-content{background:#fff;padding:20px;border-radius:8px;width:85%;max-width:400px}
+        .modal h4{margin-bottom:15px;font-size:16px}
+        .modal input{width:100%;padding:8px;border:1px #ddd solid;border-radius:4px;margin:10px 0}
+        .modal-btn{margin-top:15px;display:flex;gap:10px;justify-content:flex-end}
+        .modal-btn button{padding:6px 15px;border-radius:4px;border:none;cursor:pointer}
+        .confirm{background:#27ae60;color:#fff}
+        .cancel{background:#999;color:#fff}
+        .danger{background:#e74c3c;color:#fff}
+        .page{display:none}
+        .page.active{display:block}
+        .loading{color:#2980b9;margin:4px 0;}
+    </style>
+</head>
+<body>
+    <div class="login-mask" id="loginMask">
+        <h2>项目施工前中后影像归档系统</h2>
+        <p>请先登录账户，即可使用全部功能</p>
+        <div class="mask-btn-group">
+            <button class="mask-btn login-btn" onclick="openLoginModal()">立即登录</button>
+            <button class="mask-btn register-btn" onclick="openRegisterModal()">注册账户</button>
+        </div>
+    </div>
+
+    <div class="nav-bar">
+        <div class="nav-left">
+            <div class="nav-title">项目施工前中后影像归档系统</div>
+            <div class="nav-menu">
+                <button class="active" onclick="switchPage('user-page')">我的项目</button>
+            </div>
+        </div>
+        <div class="account-info">
+            当前用户：<span id="currentUser">未登录</span>
+        </div>
+        <div class="account-btn-group">
+            <button class="account-btn login-btn" id="loginBtn" onclick="openLoginModal()">登录</button>
+            <button class="account-btn register-btn" id="registerBtn" onclick="openRegisterModal()">注册</button>
+            <button class="account-btn logout-btn" id="logoutBtn" onclick="logout()" style="display:none">退出登录</button>
+        </div>
+    </div>
+
+    <div class="page active" id="user-page">
+        <div class="project-info">
+            <h3>项目基础信息（导出Excel自动填充）</h3>
+            <div class="info-row">
+                <div class="info-item">
+                    <label>项目名称</label>
+                    <input type="text" id="projectName" placeholder="请输入项目全称">
+                </div>
+                <div class="info-item">
+                    <label>施工单位</label>
+                    <input type="text" id="buildCompany" placeholder="请输入施工单位">
+                </div>
+                <div class="info-item">
+                    <label>建设单位</label>
+                    <input type="text" id="ownerCompany" placeholder="请输入建设单位">
+                </div>
+                <div class="info-item">
+                    <label>项目负责人</label>
+                    <input type="text" id="projectLeader" placeholder="请输入负责人姓名">
+                </div>
+            </div>
+            <button class="save-info-btn" onclick="saveProjectInfo()">保存项目信息</button>
+        </div>
+
+        <div class="area-manage">
+            <label>当前施工区域：</label>
+            <select id="areaSelect" onchange="switchArea()"></select>
+            <button class="add-area-btn" onclick="openAreaModal()">新增区域</button>
+            <button class="del-area-btn" onclick="deleteArea()">删除当前区域</button>
+            <button class="add-loc-btn" onclick="addLocation()">添加位置</button>
+        </div>
+
+        <table class="main-table" id="mainTable">
+            <thead>
+                <tr>
+                    <th>区域</th>
+                    <th>位置</th>
+                    <th>施工前</th>
+                    <th>施工中</th>
+                    <th>施工后</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+
+        <div class="export-area">
+            <button class="export-btn" onclick="exportExcel('daily')">施工日报表</button>
+            <button class="export-btn" onclick="exportExcel('weekly')">施工周报表</button>
+            <button class="export-btn" onclick="exportExcel('monthly')">施工月报表</button>
+            <button class="export-btn" onclick="exportExcel('all')">全量Excel导出</button>
+        </div>
+    </div>
+
+    <!-- 弹窗 -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <h4>账户登录</h4>
+            <input type="text" id="loginUsername" placeholder="用户名">
+            <input type="password" id="loginPassword" placeholder="密码">
+            <div class="modal-btn">
+                <button class="cancel" onclick="closeLoginModal()">取消</button>
+                <button class="confirm" onclick="login()">登录</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <h4>账户注册</h4>
+            <input type="text" id="registerUsername" placeholder="用户名">
+            <input type="password" id="registerPassword" placeholder="密码">
+            <input type="password" id="registerPassword2" placeholder="确认密码">
+            <div class="modal-btn">
+                <button class="cancel" onclick="closeRegisterModal()">取消</button>
+                <button class="confirm" onclick="register()">注册</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="areaModal">
+        <div class="modal-content">
+            <h4>添加施工区域</h4>
+            <input type="text" id="areaName" placeholder="区域名称">
+            <div class="modal-btn">
+                <button class="cancel" onclick="closeAreaModal()">取消</button>
+                <button class="confirm" onclick="saveArea()">确定</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <h4 id="confirmTitle">确认删除</h4>
+            <p id="confirmText">删除后数据不可恢复</p>
+            <div class="modal-btn">
+                <button class="cancel" onclick="closeConfirmModal()">取消</button>
+                <button class="danger" id="confirmBtn">确定</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+// ========== TG图床配置（后续自己填） ==========
+const TG_BOT_TOKEN = "你的TG机器人token";
+const TG_CHAT_ID = "你的TG聊天ID";
+const TG_API = `https://api.telegram.org/bot${TG_BOT_TOKEN}/sendPhoto`;
+
+const USER_KEY = "construction_user_data";
+let currentUser = null;
+let projectInfo = {};
+let areaList = ["默认区域"];
+let locationData = {};
+let nowArea = areaList[0];
+
+function init(){
+    let user = localStorage.getItem("currUser");
+    if(user){
+        currentUser = user;
+        loadUserData();
+        afterLogin();
+    }
+    renderAreaSelect();
+    renderTable();
+}
+
+function syncUserImageData(area, idx, type, imgUrl) {
+  const userData = {
+    username: currentUser,
+    area: area,
+    locIndex: idx,
+    imgType: type,
+    imgUrl: imgUrl,
+    uploadTime: new Date().toISOString(),
+    projectInfo: {...projectInfo}
+  };
+  let totalAllData = JSON.parse(localStorage.getItem("all_user_images") || "[]");
+  totalAllData.push(userData);
+  localStorage.setItem("all_user_images", JSON.stringify(totalAllData));
+}
+
+function switchPage(id){
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    document.getElementById(id).classList.add("active");
+}
+
+function openLoginModal(){document.getElementById("loginModal").style.display="flex"}
+function closeLoginModal(){document.getElementById("loginModal").style.display="none"}
+function openRegisterModal(){document.getElementById("registerModal").style.display="flex"}
+function closeRegisterModal(){document.getElementById("registerModal").style.display="none"}
+
+function register(){
+    let u = document.getElementById("registerUsername").value.trim();
+    let p = document.getElementById("registerPassword").value.trim();
+    let p2 = document.getElementById("registerPassword2").value.trim();
+    if(!u||!p)return alert("账号密码不能为空");
+    if(p!==p2)return alert("两次密码不一致");
+    let allUser = JSON.parse(localStorage.getItem(USER_KEY)||"{}");
+    if(allUser[u])return alert("账号已存在");
+    allUser[u] = {pwd:btoa(p),info:{},area:["默认区域"],loc:{}};
+    localStorage.setItem(USER_KEY,JSON.stringify(allUser));
+    alert("注册成功，请登录");
+    closeRegisterModal();openLoginModal();
+}
+
+function login(){
+    let u = document.getElementById("loginUsername").value.trim();
+    let p = document.getElementById("loginPassword").value.trim();
+    let allUser = JSON.parse(localStorage.getItem(USER_KEY)||"{}");
+    if(!allUser[u])return alert("账号不存在");
+    if(allUser[u].pwd !== btoa(p))return alert("密码错误");
+    currentUser = u;
+    localStorage.setItem("currUser",u);
+    loadUserData();
+    afterLogin();
+    closeLoginModal();
+}
+
+function logout(){
+    currentUser=null;
+    localStorage.removeItem("currUser");
+    document.getElementById("loginMask").style.display="flex";
+    document.getElementById("currentUser").innerText="未登录";
+    document.getElementById("loginBtn").style.display="inline-block";
+    document.getElementById("registerBtn").style.display="inline-block";
+    document.getElementById("logoutBtn").style.display="none";
+}
+
+function loadUserData(){
+    let allUser = JSON.parse(localStorage.getItem(USER_KEY)||"{}");
+    let d = allUser[currentUser];
+    projectInfo = d.info||{};
+    areaList = d.area||["默认区域"];
+    locationData = d.loc||{};
+    nowArea = areaList[0];
+}
+function saveUserData(){
+    let allUser = JSON.parse(localStorage.getItem(USER_KEY)||"{}");
+    allUser[currentUser]={
+        ...allUser[currentUser],
+        info:projectInfo,area:areaList,loc:locationData
+    };
+    localStorage.setItem(USER_KEY,JSON.stringify(allUser));
+}
+
+function fillProjectInfo(){
+    document.getElementById("projectName").value=projectInfo.projectName||"";
+    document.getElementById("buildCompany").value=projectInfo.buildCompany||"";
+    document.getElementById("ownerCompany").value=projectInfo.ownerCompany||"";
+    document.getElementById("projectLeader").value=projectInfo.projectLeader||"";
+}
+function saveProjectInfo(){
+    projectInfo={
+        projectName:document.getElementById("projectName").value.trim(),
+        buildCompany:document.getElementById("buildCompany").value.trim(),
+        ownerCompany:document.getElementById("ownerCompany").value.trim(),
+        projectLeader:document.getElementById("projectLeader").value.trim()
+    };
+    saveUserData();
+    alert("项目信息已保存");
+}
+
+function renderAreaSelect(){
+    let sel=document.getElementById("areaSelect");
+    sel.innerHTML="";
+    areaList.forEach(a=>{
+        let op=document.createElement("option");
+        op.value=a;op.innerText=a;
+        if(a===nowArea)op.selected=true;
+        sel.appendChild(op);
+    });
+}
+function switchArea(){
+    nowArea=document.getElementById("areaSelect").value;
+    renderTable();
+}
+function openAreaModal(){document.getElementById("areaModal").style.display="flex"}
+function closeAreaModal(){document.getElementById("areaModal").style.display="none"}
+function saveArea(){
+    let n=document.getElementById("areaName").value.trim();
+    if(!n)return alert("请输入区域名");
+    if(!areaList.includes(n))areaList.push(n);
+    if(!locationData[n])locationData[n]=[];
+    nowArea=n;
+    saveUserData();
+    renderAreaSelect();
+    closeAreaModal();renderTable();
+}
+function deleteArea(){
+    if(areaList.length<=1)return alert("至少保留一个区域");
+    document.getElementById("confirmTitle").innerText="删除区域";
+    document.getElementById("confirmText").innerText="删除区域及所有影像数据";
+    document.getElementById("confirmBtn").onclick=()=>{
+        delete locationData[nowArea];
+        areaList=areaList.filter(x=>x!==nowArea);
+        nowArea=areaList[0];
+        saveUserData();
+        renderAreaSelect();renderTable();
+        closeConfirmModal();
+    };
+    document.getElementById("confirmModal").style.display="flex";
+}
+function closeConfirmModal(){document.getElementById("confirmModal").style.display="none"}
+
+function addLocation(){
+    if(!locationData[nowArea])locationData[nowArea]=[];
+    let idx=locationData[nowArea].length+1;
+    locationData[nowArea].push({
+        name:`位置${idx}`,before:"",doing:"",after:"",
+        bName:"",dName:"",aName:"",time:new Date().toLocaleString()
+    });
+    saveUserData();renderTable();
+}
+function delLoc(idx){
+    document.getElementById("confirmTitle").innerText="删除位置";
+    document.getElementById("confirmText").innerText="删除该位置全部图片";
+    document.getElementById("confirmBtn").onclick=()=>{
+        locationData[nowArea].splice(idx,1);
+        locationData[nowArea].forEach((item,i)=>item.name=`位置${i+1}`);
+        saveUserData();renderTable();closeConfirmModal();
+    };
+    document.getElementById("confirmModal").style.display="flex";
+}
+
+async function uploadToTG(file,area,idx,type){
+    let form=new FormData();
+    form.append("chat_id",TG_CHAT_ID);
+    form.append("photo",file);
+    try{
+        let res=await fetch(TG_API,{method:"POST",body:form});
+        let json=await res.json();
+        if(!json.ok)throw json;
+        let arr=json.result.photo;
+        let realUrl=`https://api.telegram.org/file/bot${TG_BOT_TOKEN}/${json.result.photo[arr.length-1].file_path}`;
+        updateImgData(area,idx,type,realUrl,file.name);
+    }catch(e){
+        alert("图片上传失败，请检查TG密钥");
+    }
+}
+function updateImgData(area,idx,type,url,name){
+    let map={before:"bName",doing:"dName",after:"aName"};
+    locationData[area][idx][type]=url;
+    locationData[area][idx][map[type]]=name;
+    locationData[area][idx].time=new Date().toLocaleString();
+    saveUserData();
+    syncUserImageData(area, idx, type, url);
+    renderTable();
+}
+
+function selectImg(area,idx,type,dom){
+    let file=dom.files[0];
+    if(!file)return;
+    uploadToTG(file,area,idx,type);
+    dom.value="";
+}
+
+function renderTable(){
+    let tb=document.getElementById("tableBody");
+    tb.innerHTML="";
+    let list=locationData[nowArea]||[];
+    let rowNum=list.length;
+    list.forEach((item,idx)=>{
+        let tr=document.createElement("tr");
+        if(idx===0){
+            let tdArea=document.createElement("td");
+            tdArea.className="area-cell";
+            tdArea.innerText=nowArea;
+            tdArea.rowSpan=rowNum;
+            tr.appendChild(tdArea);
+        }
+        tr.innerHTML+=`
+            <td>${item.name}</td>
+            <td class="upload-cell">
+                <input type="file" class="file-input" id="f_${idx}_b" accept="image/*" onchange="selectImg('${nowArea}',${idx},'before',this)">
+                <label for="f_${idx}_b" class="upload-btn">上传图片</label>
+                ${item.before?`<img src="${item.before}" class="img-preview">`:'<p style="font-size:12px;color:#999">未上传</p>'}
+            </td>
+            <td class="upload-cell">
+                <input type="file" class="file-input" id="f_${idx}_d" accept="image/*" onchange="selectImg('${nowArea}',${idx},'doing',this)">
+                <label for="f_${idx}_d" class="upload-btn">上传图片</label>
+                ${item.doing?`<img src="${item.doing}" class="img-preview">`:'<p style="font-size:12px;color:#999">未上传</p>'}
+            </td>
+            <td class="upload-cell">
+                <input type="file" class="file-input" id="f_${idx}_a" accept="image/*" onchange="selectImg('${nowArea}',${idx},'after',this)">
+                <label for="f_${idx}_a" class="upload-btn">上传图片</label>
+                ${item.after?`<img src="${item.after}" class="img-preview">`:'<p style="font-size:12px;color:#999">未上传</p>'}
+            </td>
+            <td class="loc-op-cell"><button class="del-loc-btn" onclick="delLoc(${idx})">删除</button></td>
+        `;
+        tb.appendChild(tr);
+    });
+    let addTr=document.createElement("tr");
+    addTr.innerHTML=`<button class="add-row-btn" onclick="addLocation()">添加位置</button></td>`;
+    tb.appendChild(addTr);
+}
+
+function exportExcel(type){
+    let allData=[];
+    Object.keys(locationData).forEach(area=>{
+        locationData[area].forEach(loc=>{
+            allData.push({
+                area,loc:loc.name,
+                before:loc.before||"",doing:loc.doing||"",after:loc.after||"",
+                time:loc.time
+            });
+        });
+    });
+    if(allData.length===0)return alert("暂无数据");
+    let wb=XLSX.utils.book_new();
+    let base=[["项目名称",projectInfo.projectName||""],["施工单位",projectInfo.buildCompany||""],["负责人",projectInfo.projectLeader||""]];
+    let baseSheet=XLSX.utils.aoa_to_sheet(base);
+    XLSX.utils.book_append_sheet(wb,baseSheet,"项目信息");
+
+    let head=["区域","位置","施工前照片链接","施工中照片链接","施工后照片链接","上传时间"];
+    let sheetData=[head];
+    allData.forEach(d=>sheetData.push([d.area,d.loc,d.before,d.doing,d.after,d.time]));
+    let sheet=XLSX.utils.aoa_to_sheet(sheetData);
+    XLSX.utils.book_append_sheet(wb,sheet,"施工影像记录");
+    XLSX.writeFile(wb,`施工影像归档_${new Date().toLocaleDateString()}.xlsx`);
+}
+
+function afterLogin(){
+    document.getElementById("loginMask").style.display="none";
+    document.getElementById("currentUser").innerText=currentUser;
+    document.getElementById("loginBtn").style.display="none";
+    document.getElementById("registerBtn").style.display="none";
+    document.getElementById("logoutBtn").style.display="inline-block";
+    fillProjectInfo();
+    renderAreaSelect();
+    renderTable();
+}
+
+window.onload=init;
+</script>
+</body>
+</html>三、后台源码 admin.html（汇总所有用户图片）功能：查看全部账号上传的所有图片、筛选用户、导出全部影像台账<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>全员影像汇总后台</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:微软雅黑}
+body{padding:20px;background:#f5f6f8}
+h2{margin-bottom:20px;color:#222}
+.bar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;align-items:center}
+button{padding:8px 14px;border:none;background:#2980b9;color:#fff;border-radius:4px;cursor:pointer}
+input{padding:8px;border:1px solid #ddd;border-radius:4px;width:200px}
+.card-list{display:flex;flex-wrap:wrap;gap:15px}
+.card{background:#fff;padding:12px;border-radius:8px;width:240px;box-shadow:0 2px 8px #00000015}
+.card img{max-width:100%;max-height:140px;object-fit:cover;border-radius:4px}
+.card p{font-size:13px;color:#555;margin:4px 0}
+.empty{color:#999;margin-top:30px}
+</style>
+</head>
+<body>
+<h2>全员施工影像汇总管理后台</h2>
+<div class="bar">
+    <button onclick="loadAll()">刷新全部数据</button>
+    <button onclick="exportAll()">导出全部影像台账</button>
+    <input placeholder="搜索用户名" id="key">
+    <button onclick="searchUser()">筛选</button>
+</div>
+<div class="card-list" id="list"></div>
+
+<script>
+let allData = [];
+
+function loadAll(){
+    allData = JSON.parse(localStorage.getItem("all_user_images")||"[]");
+    render(allData);
+}
+
+function render(arr){
+    let dom = document.getElementById("list");
+    dom.innerHTML = "";
+    if(arr.length===0){
+        dom.innerHTML = "<p class='empty'>暂无任何用户上传影像数据</p>";
+        return;
+    }
+    arr.forEach(item=>{
+        let typeText = {before:"施工前",doing:"施工中",after:"施工后"}[item.imgType];
+        let card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+            <p><strong>用户：</strong>${item.username}</p>
+            <p><strong>区域：</strong>${item.area}</p>
+            <p><strong>阶段：</strong>${typeText}</p>
+            <p><strong>时间：</strong>${item.uploadTime.substr(0,10)}</p>
+            <img src="${item.imgUrl}" onerror="this.style.display='none'">
+            <p><a href="${item.imgUrl}" target="_blank">打开原图链接</a></p>
+        `;
+        dom.appendChild(card);
+    })
+}
+
+function searchUser(){
+    let k = document.getElementById("key").value.trim();
+    let res = allData.filter(x=>x.username.includes(k));
+    render(res);
+}
+
+function exportAll(){
+    if(allData.length===0) return alert("暂无数据");
+    let tsv = "用户名\\t区域\\t施工阶段\\t图片链接\\t上传时间\\n";
+    allData.forEach(d=>{
+        let typeText = {before:"施工前",doing:"施工中",after:"施工后"}[d.imgType];
+        tsv += `${d.username}\\t${d.area}\\t${typeText}\\t${d.imgUrl}\\t${d.uploadTime}\\n`;
+    })
+    let blob = new Blob([tsv],{type:"text/plain"});
+    let a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "全员影像汇总台账.txt";
+    a.click();
+}
+
+window.onload = loadAll;
+</script>
+</body>
+</html>
