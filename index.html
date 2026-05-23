@@ -209,7 +209,12 @@
 // ========== TG图床配置（后续自己填） ==========
 const TG_BOT_TOKEN = "8427494834:AAGN47L0zLR_tSNL_ObBse1FbJjUfUAqegQ";
 const TG_CHAT_ID = "-1003006900961";
-const TG_API = `https://api.telegram.org/bot${TG_BOT_TOKEN}/sendPhoto`;
+// Telegram API 端点列表：优先使用反代（国内可直接访问），最后兜底官方API
+const TG_API_BASES = [
+    "https://api.telegram.kim",          // 反代1
+    "https://tg-api.chatie.io",          // 反代2
+    "https://api.telegram.org"           // 官方（需科学上网）
+];
 
 const USER_KEY = "construction_user_data";
 let currentUser = null;
@@ -403,63 +408,100 @@ function disableUploadBtns(area,idx,disabled){
     });
 }
 
-function uploadToTG(file,area,idx,type){
+async function uploadToTG(file,area,idx,type){
     showStatus(area,idx,type,"正在上传...","progress");
     setProgress(area,idx,type,0);
     disableUploadBtns(area,idx,true);
     let form=new FormData();
     form.append("chat_id",TG_CHAT_ID);
     form.append("photo",file);
-    let xhr=new XMLHttpRequest();
-    xhr.open("POST",TG_API,true);
-    xhr.upload.onprogress=function(e){
-        if(e.lengthComputable){
-            let pct=Math.round(e.loaded/e.total*100);
-            setProgress(area,idx,type,pct);
-            showStatus(area,idx,type,"上传中 "+pct+"%","progress");
-        }
-    };
-    xhr.onload=async function(){
-        disableUploadBtns(area,idx,false);
+    let lastError=null;
+    // 遍历所有API端点，直到成功或全部失败
+    for(let i=0;i<TG_API_BASES.length;i++){
+        let base=TG_API_BASES[i];
+        let apiUrl=`${base}/bot${TG_BOT_TOKEN}/sendPhoto`;
+        showStatus(area,idx,type,`尝试端点 ${i+1}/${TG_API_BASES.length}`,"progress");
         try{
-            let json=JSON.parse(xhr.responseText);
+            // 使用 fetch 替代 XHR，支持更简单的重试
+            let res=await fetchWithProgress(apiUrl,{
+                method:"POST",
+                body:form
+            },(pct)=>{
+                setProgress(area,idx,type,pct);
+                showStatus(area,idx,type,`上传中 ${pct}% (端点${i+1})`,"progress");
+            });
+            let json=await res.json();
             if(!json.ok){
-                let errMsg=json.description||"未知错误";
-                showStatus(area,idx,type,"失败: "+errMsg,"error");
-                setProgress(area,idx,type,0);
-                return;
+                lastError=json.description||"API返回错误";
+                continue; // 尝试下一个端点
             }
             let fileId=json.result.photo[json.result.photo.length-1].file_id;
-            // 调用 getFile API 获取 file_path
-            let getFileRes=await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/getFile?file_id=${fileId}`);
+            // 获取文件路径（使用相同端点）
+            let getFileRes=await fetch(`${base}/bot${TG_BOT_TOKEN}/getFile?file_id=${fileId}`);
             let getFileJson=await getFileRes.json();
             if(!getFileJson.ok){
-                showStatus(area,idx,type,"失败: 无法获取文件路径","error");
-                setProgress(area,idx,type,0);
-                return;
+                lastError="无法获取文件路径";
+                continue;
             }
             let fp=getFileJson.result.file_path;
             if(!fp){
-                showStatus(area,idx,type,"失败: 未获取到file_path","error");
-                setProgress(area,idx,type,0);
-                return;
+                lastError="未获取到file_path";
+                continue;
             }
-            let realUrl=`https://api.telegram.org/file/bot${TG_BOT_TOKEN}/${fp}`;
+            // 构建图片访问URL（使用相同端点）
+            let realUrl=`${base}/file/bot${TG_BOT_TOKEN}/${fp}`;
             updateImgData(area,idx,type,realUrl,file.name);
             showStatus(area,idx,type,"上传成功","success");
             setProgress(area,idx,type,100);
             setTimeout(()=>{showStatus(area,idx,type,"","");setProgress(area,idx,type,0);},3000);
+            disableUploadBtns(area,idx,false);
+            return; // 成功，结束函数
         }catch(e){
-            showStatus(area,idx,type,"失败: 响应解析异常","error");
-            setProgress(area,idx,type,0);
+            lastError=e.message||"网络请求失败";
+            // 继续尝试下一个端点
         }
-    };
-    xhr.onerror=function(){
-        disableUploadBtns(area,idx,false);
-        showStatus(area,idx,type,"失败: 网络连接异常","error");
-        setProgress(area,idx,type,0);
-    };
-    xhr.send(form);
+    }
+    // 所有端点都失败
+    disableUploadBtns(area,idx,false);
+    showStatus(area,idx,type,`失败: ${lastError}`,"error");
+    setProgress(area,idx,type,0);
+}
+// 带进度回调的 fetch
+function fetchWithProgress(url,options,onProgress){
+    return new Promise((resolve,reject)=>{
+        let xhr=new XMLHttpRequest();
+        xhr.open(options.method||"GET",url,true);
+        xhr.responseType="text";
+        // 设置请求头
+        if(options.headers){
+            for(let k in options.headers){
+                xhr.setRequestHeader(k,options.headers[k]);
+            }
+        }
+        xhr.upload.onprogress=function(e){
+            if(e.lengthComputable&&onProgress){
+                let pct=Math.round(e.loaded/e.total*100);
+                onProgress(pct);
+            }
+        };
+        xhr.onload=function(){
+            if(xhr.status>=200&&xhr.status<300){
+                resolve({
+                    ok:true,
+                    status:xhr.status,
+                    statusText:xhr.statusText,
+                    text:()=>Promise.resolve(xhr.responseText),
+                    json:()=>Promise.resolve(JSON.parse(xhr.responseText))
+                });
+            }else{
+                reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
+            }
+        };
+        xhr.onerror=function(){
+            reject(new Error("网络请求失败"));
+        };
+        xhr.send(options.body);
+    });
 }
 function updateImgData(area,idx,type,url,name){
     let map={before:"bName",doing:"dName",after:"aName"};
@@ -471,7 +513,7 @@ function updateImgData(area,idx,type,url,name){
     renderTable();
 }
 
-function selectImg(area,idx,type,dom){
+async function selectImg(area,idx,type,dom){
     let file=dom.files[0];
     if(!file)return;
     // 文件大小检查：Telegram Bot API 限制 10MB
@@ -487,7 +529,7 @@ function selectImg(area,idx,type,dom){
         dom.value="";
         return;
     }
-    uploadToTG(file,area,idx,type);
+    await uploadToTG(file,area,idx,type);
     dom.value="";
 }
 
