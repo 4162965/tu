@@ -1,137 +1,52 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
-    <title>项目施工影像归档系统</title>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <link rel="stylesheet" href="css/style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>全员影像汇总</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:微软雅黑}
+body{padding:20px;background:#f5f6f8}
+h2{margin-bottom:20px}
+.bar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px}
+button{padding:8px 14px;border:none;background:#2980b9;color:#fff;border-radius:4px;cursor:pointer}
+input{padding:8px;border:1px solid #ddd;border-radius:4px;width:200px}
+.card-list{display:flex;flex-wrap:wrap;gap:15px}
+.card{background:#fff;padding:12px;border-radius:8px;width:240px}
+.card img{max-width:100%;max-height:140px;object-fit:cover;border-radius:4px}
+.card p{font-size:13px;margin:4px 0}
+</style>
 </head>
 <body>
-    <div class="login-mask" id="loginMask">
-        <h2>项目施工前中后影像归档系统</h2>
-        <p>请先登录账户，即可使用全部功能</p>
-        <div class="mask-btn-group">
-            <button class="mask-btn login-btn" onclick="openLoginModal()">立即登录</button>
-            <button class="mask-btn register-btn" onclick="openRegisterModal()">注册账户</button>
-        </div>
-    </div>
+<h2>全员施工影像汇总</h2>
+<div class="bar">
+<button onclick="loadAll()">刷新</button>
+<button onclick="exportAll()">导出台账</button>
+<input placeholder="搜索用户" id="key">
+<button onclick="searchUser()">筛选</button>
+</div>
+<div class="card-list" id="list"></div>
 
-    <div class="nav-bar">
-        <div class="nav-left">
-            <div class="nav-title">项目施工前中后影像归档系统</div>
-            <div class="nav-menu">
-                <button class="active" onclick="switchPage('user-page')">我的项目</button>
-            </div>
-        </div>
-        <div class="account-info">
-            当前用户：<span id="currentUser">未登录</span>
-        </div>
-        <div class="account-btn-group">
-            <button class="account-btn login-btn" id="loginBtn" onclick="openLoginModal()">登录</button>
-            <button class="account-btn register-btn" id="registerBtn" onclick="openRegisterModal()">注册</button>
-            <button class="account-btn logout-btn" id="logoutBtn" onclick="logout()" style="display:none">退出登录</button>
-        </div>
-    </div>
-
-    <div class="page active" id="user-page">
-        <div class="project-info">
-            <h3>项目基础信息（导出Excel自动填充）</h3>
-            <div class="info-row">
-                <div class="info-item">
-                    <label>项目名称</label>
-                    <input type="text" id="projectName" placeholder="请输入项目全称">
-                </div>
-                <div class="info-item">
-                    <label>施工单位</label>
-                    <input type="text" id="buildCompany" placeholder="请输入施工单位">
-                </div>
-                <div class="info-item">
-                    <label>建设单位</label>
-                    <input type="text" id="ownerCompany" placeholder="请输入建设单位">
-                </div>
-                <div class="info-item">
-                    <label>项目负责人</label>
-                    <input type="text" id="projectLeader" placeholder="请输入负责人姓名">
-                </div>
-            </div>
-            <button class="save-info-btn" onclick="saveProjectInfo()">保存项目信息</button>
-        </div>
-
-        <div class="area-manage">
-            <label>当前施工区域：</label>
-            <select id="areaSelect" onchange="switchArea()"></select>
-            <button class="add-area-btn" onclick="openAreaModal()">新增区域</button>
-            <button class="del-area-btn" onclick="deleteArea()">删除当前区域</button>
-            <button class="add-loc-btn" onclick="addLocation()">添加位置</button>
-        </div>
-
-        <table class="main-table" id="mainTable">
-            <thead>
-                <tr>
-                    <th>区域</th>
-                    <th>位置</th>
-                    <th>施工前</th>
-                    <th>施工中</th>
-                    <th>施工后</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
-
-        <div class="export-area">
-            <button class="export-btn" onclick="exportExcel('daily')">施工日报表</button>
-            <button class="export-btn" onclick="exportExcel('weekly')">施工周报表</button>
-            <button class="export-btn" onclick="exportExcel('monthly')">施工月报表</button>
-            <button class="export-btn" onclick="exportExcel('all')">全量Excel导出</button>
-        </div>
-    </div>
-
-    <div class="modal" id="loginModal">
-        <div class="modal-content">
-            <h4>账户登录</h4>
-            <input type="text" id="loginUsername" placeholder="用户名">
-            <input type="password" id="loginPassword" placeholder="密码">
-            <div class="modal-btn">
-                <button class="cancel" onclick="closeLoginModal()">取消</button>
-                <button class="confirm" onclick="login()">登录</button>
-            </div>
-        </div>
-    </div>
-    <div class="modal" id="registerModal">
-        <div class="modal-content">
-            <h4>账户注册</h4>
-            <input type="text" id="registerUsername" placeholder="用户名">
-            <input type="password" id="registerPassword" placeholder="密码">
-            <input type="password" id="registerPassword2" placeholder="确认密码">
-            <div class="modal-btn">
-                <button class="cancel" onclick="closeRegisterModal()">取消</button>
-                <button class="confirm" onclick="register()">注册</button>
-            </div>
-        </div>
-    </div>
-    <div class="modal" id="areaModal">
-        <div class="modal-content">
-            <h4>添加施工区域</h4>
-            <input type="text" id="areaName" placeholder="区域名称">
-            <div class="modal-btn">
-                <button class="cancel" onclick="closeAreaModal()">取消</button>
-                <button class="confirm" onclick="saveArea()">确定</button>
-            </div>
-        </div>
-    </div>
-    <div class="modal" id="confirmModal">
-        <div class="modal-content">
-            <h4 id="confirmTitle">确认删除</h4>
-            <p id="confirmText">删除后数据不可恢复</p>
-            <div class="modal-btn">
-                <button class="cancel" onclick="closeConfirmModal()">取消</button>
-                <button class="danger" id="confirmBtn">确定</button>
-            </div>
-        </div>
-    </div>
-
-<script src="js/main.js"></script>
+<script>
+let allData=[];
+function loadAll(){allData=JSON.parse(localStorage.getItem("all_user_images")||"[]");render(allData)}
+function render(arr){
+let d=document.getElementById("list");d.innerHTML="";
+arr.forEach(i=>{
+let t={before:"施工前",doing:"施工中",after:"施工后"}[i.imgType];
+let c=document.createElement("div");c.className="card";
+c.innerHTML=`<p>用户：${i.username}</p><p>区域：${i.area}</p><p>阶段：${t}</p><p>${i.uploadTime.substr(0,10)}</p><img src="${i.imgUrl}"><p><a href="${i.imgUrl}" target="_blank">查看原图</a></p>`;
+d.appendChild(c);
+})
+}
+function searchUser(){let k=document.getElementById("key").value.trim();render(allData.filter(x=>x.username.includes(k)))}
+function exportAll(){
+if(allData.length===0)return;
+let tsv="用户名\t区域\t阶段\t链接\t时间\n";
+allData.forEach(d=>{tsv+=`${d.username}\t${d.area}\t${{before:"施工前",doing:"施工中",after:"施工后"}[d.imgType]}\t${d.imgUrl}\t${d.uploadTime}\n`});
+let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([tsv]));a.download="全员影像台账.txt";a.click();
+}
+window.onload=loadAll;
+</script>
 </body>
 </html>
