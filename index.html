@@ -7,30 +7,38 @@
     <style>
         *{margin:0;padding:0;box-sizing:border-box;font-family:微软雅黑}
         body{background:#fff;padding:20px}
-        
+        .header{text-align:center;margin-bottom:10px}
+        h1{color:#333;font-size:22px}
         .nav-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;padding:10px;background:#f8f9fa;border-radius:6px;border:1px solid #eee}
         .nav-left{display:flex;align-items:center;gap:15px}
         .nav-title{font-size:16px;font-weight:bold}
-        
+        .nav-menu{display:flex;gap:10px}
+        .nav-menu button{padding:6px 12px;border:none;border-radius:4px;cursor:pointer;font-size:14px}
+        .nav-menu .active{background:#2980b9;color:#fff}
         .account-info{font-size:14px}
         .account-btn-group{display:flex;gap:10px}
         .account-btn{padding:6px 12px;border:none;border-radius:4px;cursor:pointer;font-size:14px}
         .login-btn{background:#2980b9;color:#fff}
         .register-btn{background:#27ae60;color:#fff}
         .logout-btn{background:#e74c3c;color:#fff}
-
+        .admin-btn{background:#9b59b6;color:#fff}
+        .project-info{background:#f8f9fa;padding:15px;border-radius:6px;margin-bottom:20px;border:1px solid #eee}
+        .info-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:10px}
+        .info-item label{font-size:13px;color:#666;display:block;margin-bottom:4px}
+        .info-item input{width:100%;padding:6px;border:1px #ddd solid;border-radius:4px}
+        .save-info-btn{padding:6px 15px;background:#2980b9;color:#fff;border:none;border-radius:4px;cursor:pointer}
         .area-manage{margin-bottom:20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
         .area-manage label{font-size:14px}
+        .area-manage select{padding:6px;border:1px #ddd solid;border-radius:4px;display: none;}
         .area-manage button{padding:6px 15px;border:none;border-radius:4px;cursor:pointer;font-size:14px}
         .add-area-btn{background:#e67e22;color:#fff}
         .del-area-btn{background:#e74c3c;color:#fff}
         .add-loc-btn{background:#27ae60;color:#fff}
-
         .main-table{width:100%;border-collapse:collapse;margin-bottom:20px}
         .main-table th,.main-table td{border:1px solid #333;padding:8px;text-align:center;vertical-align:middle}
         .main-table th{background:#f8f9fa;font-weight:bold;font-size:14px}
         .main-table td{font-size:14px}
-        .area-cell{font-weight:bold;color:#333;background:#f8f9fa}
+        .area-cell{font-weight:bold;color:#333}
         .upload-cell{min-width:160px;height:120px}
         .upload-btn{padding:5px 10px;background:#fff;border:1px dashed #999;border-radius:4px;cursor:pointer;color:#666;margin-bottom:6px;font-size:13px;display:inline-block}
         .upload-btn:hover{border-color:#2980b9;color:#2980b9}
@@ -47,11 +55,11 @@
         .progress-bar .fill{height:100%;background:#2980b9;border-radius:3px;transition:width 0.2s}
         .add-row-btn{width:100%;padding:10px;background:#f8f9fa;border:1px dashed #999;border-radius:4px;cursor:pointer;font-size:14px}
         .add-row-btn:hover{background:#f0f0f0}
-
+        .export-area{margin-bottom:20px;text-align:center;display: none;}
         .login-mask{position:fixed;top:0;left:0;width:100%;height:100%;background:#fff;z-index:9998;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px}
+        .login-mask h2{color:#333}
         .mask-btn-group{display:flex;gap:15px}
         .mask-btn{padding:10px 20px;border:none;border-radius:6px;cursor:pointer;font-size:16px}
-
         .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:9999}
         .modal-content{background:#fff;padding:20px;border-radius:8px;width:85%;max-width:400px}
         .modal h4{margin-bottom:15px;font-size:16px}
@@ -61,108 +69,104 @@
         .confirm{background:#27ae60;color:#fff}
         .cancel{background:#999;color:#fff}
         .danger{background:#e74c3c;color:#fff}
-
         .page{display:none}
         .page.active{display:block}
+        .loading{color:#2980b9;margin:4px 0;}
     </style>
 </head>
 <body>
-
-<div class="login-mask" id="loginMask">
-    <h2>施工影像上传系统</h2>
-    <p>请先登录账户</p>
-    <div class="mask-btn-group">
-        <button class="mask-btn login-btn" onclick="openLoginModal()">立即登录</button>
-        <button class="mask-btn register-btn" onclick="openRegisterModal()">注册账户</button>
-    </div>
-</div>
-
-<div class="nav-bar">
-    <div class="nav-left">
-        <div class="nav-title">施工影像上传系统</div>
-    </div>
-    <div class="account-info">
-        当前用户：<span id="currentUser">未登录</span>
-    </div>
-    <div class="account-btn-group">
-        <button class="account-btn login-btn" id="loginBtn" onclick="openLoginModal()">登录</button>
-        <button class="account-btn register-btn" id="registerBtn" onclick="openRegisterModal()">注册</button>
-        <button class="account-btn logout-btn" id="logoutBtn" onclick="logout()" style="display:none">退出登录</button>
-    </div>
-</div>
-
-<div class="page active" id="user-page">
-    <div class="area-manage">
-        <button class="add-area-btn" onclick="openAreaModal()">新增区域</button>
-        <button class="del-area-btn" onclick="deleteLastArea()">删除最后一个区域</button>
-        <button class="add-loc-btn" onclick="addLocationToAll()">给所有区域添加位置</button>
-    </div>
-
-    <table class="main-table" id="mainTable">
-        <thead>
-            <tr>
-                <th>区域</th>
-                <th>位置</th>
-                <th>施工前</th>
-                <th>施工中</th>
-                <th>施工后</th>
-                <th>操作</th>
-            </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-    </table>
-</div>
-
-<!-- 弹窗 -->
-<div class="modal" id="loginModal">
-    <div class="modal-content">
-        <h4>账户登录</h4>
-        <input type="text" id="loginUsername" placeholder="用户名">
-        <input type="password" id="loginPassword" placeholder="密码">
-        <div class="modal-btn">
-            <button class="cancel" onclick="closeLoginModal()">取消</button>
-            <button class="confirm" onclick="login()">登录</button>
+    <div class="login-mask" id="loginMask">
+        <h2>施工影像上传系统</h2>
+        <p>请先登录账户，即可使用全部功能</p>
+        <div class="mask-btn-group">
+            <button class="mask-btn login-btn" onclick="openLoginModal()">立即登录</button>
+            <button class="mask-btn register-btn" onclick="openRegisterModal()">注册账户</button>
         </div>
     </div>
-</div>
 
-<div class="modal" id="registerModal">
-    <div class="modal-content">
-        <h4>账户注册</h4>
-        <input type="text" id="registerUsername" placeholder="用户名">
-        <input type="password" id="registerPassword" placeholder="密码">
-        <input type="password" id="registerPassword2" placeholder="确认密码">
-        <div class="modal-btn">
-            <button class="cancel" onclick="closeRegisterModal()">取消</button>
-            <button class="confirm" onclick="register()">注册</button>
+    <div class="nav-bar">
+        <div class="nav-left">
+            <div class="nav-title">施工影像上传系统</div>
+        </div>
+        <div class="account-info">
+            当前用户：<span id="currentUser">未登录</span>
+        </div>
+        <div class="account-btn-group">
+            <button class="account-btn login-btn" id="loginBtn" onclick="openLoginModal()">登录</button>
+            <button class="account-btn register-btn" id="registerBtn" onclick="openRegisterModal()">注册</button>
+            <button class="account-btn logout-btn" id="logoutBtn" onclick="logout()" style="display:none">退出登录</button>
         </div>
     </div>
-</div>
 
-<div class="modal" id="areaModal">
-    <div class="modal-content">
-        <h4>添加施工区域</h4>
-        <input type="text" id="areaName" placeholder="区域名称">
-        <div class="modal-btn">
-            <button class="cancel" onclick="closeAreaModal()">取消</button>
-            <button class="confirm" onclick="saveArea()">确定</button>
+    <div class="page active" id="user-page">
+        <div class="area-manage">
+            <button class="add-area-btn" onclick="openAreaModal()">新增区域</button>
+            <button class="del-area-btn" onclick="deleteLastArea()">删除最后区域</button>
+            <button class="add-loc-btn" onclick="addLocationToAll()">添加位置</button>
+        </div>
+
+        <table class="main-table" id="mainTable">
+            <thead>
+                <tr>
+                    <th>区域</th>
+                    <th>位置</th>
+                    <th>施工前</th>
+                    <th>施工中</th>
+                    <th>施工后</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <!-- 弹窗 -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <h4>账户登录</h4>
+            <input type="text" id="loginUsername" placeholder="用户名">
+            <input type="password" id="loginPassword" placeholder="密码">
+            <div class="modal-btn">
+                <button class="cancel" onclick="closeLoginModal()">取消</button>
+                <button class="confirm" onclick="login()">登录</button>
+            </div>
         </div>
     </div>
-</div>
-
-<div class="modal" id="confirmModal">
-    <div class="modal-content">
-        <h4 id="confirmTitle">确认删除</h4>
-        <p id="confirmText">删除后数据不可恢复</p>
-        <div class="modal-btn">
-            <button class="cancel" onclick="closeConfirmModal()">取消</button>
-            <button class="danger" id="confirmBtn">确定</button>
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <h4>账户注册</h4>
+            <input type="text" id="registerUsername" placeholder="用户名">
+            <input type="password" id="registerPassword" placeholder="密码">
+            <input type="password" id="registerPassword2" placeholder="确认密码">
+            <div class="modal-btn">
+                <button class="cancel" onclick="closeRegisterModal()">取消</button>
+                <button class="confirm" onclick="register()">注册</button>
+            </div>
         </div>
     </div>
-</div>
+    <div class="modal" id="areaModal">
+        <div class="modal-content">
+            <h4>添加施工区域</h4>
+            <input type="text" id="areaName" placeholder="区域名称">
+            <div class="modal-btn">
+                <button class="cancel" onclick="closeAreaModal()">取消</button>
+                <button class="confirm" onclick="saveArea()">确定</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <h4 id="confirmTitle">确认删除</h4>
+            <p id="confirmText">删除后数据不可恢复</p>
+            <div class="modal-btn">
+                <button class="cancel" onclick="closeConfirmModal()">取消</button>
+                <button class="danger" id="confirmBtn">确定</button>
+            </div>
+        </div>
+    </div>
 
 <script>
-// ========== 国内公共图床（无需科学上网，100%可用） ==========
+// 国内图床，无需科学上网
 const IMGBB_API_KEY = "7a3a54d18a9ac82e0295e04d6bccd064";
 
 const USER_KEY = "construction_user_data";
@@ -180,7 +184,7 @@ function init(){
     renderTable();
 }
 
-// ==================== 登录注册 ====================
+// 登录注册
 function openLoginModal(){document.getElementById("loginModal").style.display="flex"}
 function closeLoginModal(){document.getElementById("loginModal").style.display="none"}
 function openRegisterModal(){document.getElementById("registerModal").style.display="flex"}
@@ -229,9 +233,7 @@ function loadUserData(){
     if(!d) return;
     areaList = d.area||["默认区域"];
     locationData = d.loc||{};
-    areaList.forEach(a=>{
-        if(!locationData[a]) locationData[a]=[];
-    });
+    areaList.forEach(a=>{ if(!locationData[a]) locationData[a]=[]; });
 }
 
 function saveUserData(){
@@ -241,7 +243,7 @@ function saveUserData(){
     localStorage.setItem(USER_KEY,JSON.stringify(allUser));
 }
 
-// ==================== 区域管理 ====================
+// 区域
 function openAreaModal(){document.getElementById("areaModal").style.display="flex"}
 function closeAreaModal(){document.getElementById("areaModal").style.display="none"}
 
@@ -258,10 +260,10 @@ function saveArea(){
 function deleteLastArea(){
     if(areaList.length<=1)return alert("至少保留一个区域");
     document.getElementById("confirmTitle").innerText="删除区域";
-    document.getElementById("confirmText").innerText="删除最后一个区域及所有数据";
+    document.getElementById("confirmText").innerText="删除区域及所有影像数据";
     document.getElementById("confirmBtn").onclick=()=>{
-        let del = areaList.pop();
-        delete locationData[del];
+        let delArea = areaList.pop();
+        delete locationData[delArea];
         saveUserData();
         renderTable();
         closeConfirmModal();
@@ -271,7 +273,7 @@ function deleteLastArea(){
 
 function closeConfirmModal(){document.getElementById("confirmModal").style.display="none"}
 
-// ==================== 位置管理 ====================
+// 位置
 function addLocationToAll(){
     areaList.forEach(area=>{
         let arr = locationData[area]||[];
@@ -284,7 +286,7 @@ function addLocationToAll(){
 
 function delLoc(area,idx){
     document.getElementById("confirmTitle").innerText="删除位置";
-    document.getElementById("confirmText").innerText="删除该位置所有图片";
+    document.getElementById("confirmText").innerText="删除该位置全部图片";
     document.getElementById("confirmBtn").onclick=()=>{
         locationData[area].splice(idx,1);
         locationData[area].forEach((item,i)=>item.name=`位置${i+1}`);
@@ -295,7 +297,7 @@ function delLoc(area,idx){
     document.getElementById("confirmModal").style.display="flex";
 }
 
-// ==================== 上传状态 ====================
+// 上传
 function showStatus(area,idx,type,html,cls){
     let el=document.getElementById(`st_${area}_${idx}_${type}`);
     if(el){el.innerHTML=html;el.className="upload-status "+cls;}
@@ -306,41 +308,27 @@ function setProgress(area,idx,type,pct){
 }
 function disableBtn(area,idx,type,dis){
     let btn=document.getElementById(`ubtn_${area}_${idx}_${type}`);
-    if(btn){
-        if(dis) btn.classList.add("disable");
-        else btn.classList.remove("disable");
-    }
+    if(btn){ dis ? btn.classList.add("disable") : btn.classList.remove("disable"); }
 }
 
-// ==================== 国内图床上传（核心修复） ====================
 async function uploadImage(file,area,idx,type){
     disableBtn(area,idx,type,true);
     showStatus(area,idx,type,"上传中...","progress");
     setProgress(area,idx,type,30);
-
     try {
         let form = new FormData();
         form.append("image", file);
         form.append("key", IMGBB_API_KEY);
-
-        let res = await fetch("https://api.imgbb.com/1/upload", {
-            method: "POST",
-            body: form
-        });
-
+        let res = await fetch("https://api.imgbb.com/1/upload",{method:"POST",body:form});
         setProgress(area,idx,type,80);
         let json = await res.json();
-
         if(json.success){
             let url = json.data.url;
             locationData[area][idx][type] = url;
             saveUserData();
             showStatus(area,idx,type,"上传成功","success");
             setProgress(area,idx,type,100);
-            setTimeout(()=>{
-                showStatus(area,idx,type,"","");
-                setProgress(area,idx,type,0);
-            },2000);
+            setTimeout(()=>{showStatus(area,idx,type,"","");setProgress(area,idx,type,0);},2000);
             renderTable();
         }else{
             showStatus(area,idx,type,"上传失败","error");
@@ -354,35 +342,28 @@ async function uploadImage(file,area,idx,type){
 async function selectImg(area,idx,type,dom){
     let file=dom.files[0];
     if(!file)return;
-    if(file.size>10*1024*1024){
-        alert("图片不能超过10MB");
-        return;
-    }
+    if(file.size>10*1024*1024){alert("图片不能超过10MB");return;}
     await uploadImage(file,area,idx,type);
     dom.value="";
 }
 
-// ==================== 多区域同时渲染 ====================
+// 多区域同时显示
 function renderTable(){
     let tb=document.getElementById("tableBody");
     tb.innerHTML="";
-
     areaList.forEach(area=>{
         let list = locationData[area]||[];
         let rowCount = list.length;
-
         list.forEach((item,idx)=>{
             let tr = document.createElement("tr");
-
-            if(idx === 0 && rowCount > 0){
+            if(idx === 0 && rowCount>0){
                 let td = document.createElement("td");
-                td.className = "area-cell";
-                td.innerText = area;
-                td.rowSpan = rowCount;
+                td.className="area-cell";
+                td.innerText=area;
+                td.rowSpan=rowCount;
                 tr.appendChild(td);
             }
-
-            tr.innerHTML += `
+            tr.innerHTML+=`
                 <td>${item.name}</td>
                 <td class="upload-cell">
                     <input type="file" class="file-input" id="f_${area}_${idx}_b" accept="image/*" onchange="selectImg('${area}',${idx},'before',this)">
@@ -410,9 +391,8 @@ function renderTable(){
             tb.appendChild(tr);
         });
     });
-
     let addTr = document.createElement("tr");
-    addTr.innerHTML=`<td colspan="6"><button class="add-row-btn" onclick="addLocationToAll()">给所有区域添加位置</button></td>`;
+    addTr.innerHTML=`<td colspan="6"><button class="add-row-btn" onclick="addLocationToAll()">添加位置</button></td>`;
     tb.appendChild(addTr);
 }
 
