@@ -419,7 +419,7 @@ function uploadToTG(file,area,idx,type){
             showStatus(area,idx,type,"上传中 "+pct+"%","progress");
         }
     };
-    xhr.onload=function(){
+    xhr.onload=async function(){
         disableUploadBtns(area,idx,false);
         try{
             let json=JSON.parse(xhr.responseText);
@@ -429,8 +429,16 @@ function uploadToTG(file,area,idx,type){
                 setProgress(area,idx,type,0);
                 return;
             }
-            let arr=json.result.photo;
-            let fp=json.result.photo[arr.length-1].file_path;
+            let fileId=json.result.photo[json.result.photo.length-1].file_id;
+            // 调用 getFile API 获取 file_path
+            let getFileRes=await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/getFile?file_id=${fileId}`);
+            let getFileJson=await getFileRes.json();
+            if(!getFileJson.ok){
+                showStatus(area,idx,type,"失败: 无法获取文件路径","error");
+                setProgress(area,idx,type,0);
+                return;
+            }
+            let fp=getFileJson.result.file_path;
             if(!fp){
                 showStatus(area,idx,type,"失败: 未获取到file_path","error");
                 setProgress(area,idx,type,0);
