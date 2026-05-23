@@ -43,10 +43,17 @@
         .upload-cell{min-width:160px;height:120px}
         .upload-btn{padding:5px 10px;background:#fff;border:1px dashed #999;border-radius:4px;cursor:pointer;color:#666;margin-bottom:6px;font-size:13px;display:inline-block}
         .upload-btn:hover{border-color:#2980b9;color:#2980b9}
+        .upload-btn.disable{pointer-events:none;opacity:0.5}
         .img-preview{max-width:100%;max-height:80px;object-fit:cover;border-radius:4px;margin-top:5px}
         .file-input{display:none}
         .loc-op-cell{width:80px}
         .del-loc-btn{padding:4px 8px;background:#e74c3c;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px}
+        .upload-status{font-size:12px;margin-top:4px;min-height:18px}
+        .upload-status.progress{color:#2980b9}
+        .upload-status.error{color:#e74c3c}
+        .upload-status.success{color:#27ae60}
+        .progress-bar{width:100%;height:6px;background:#eee;border-radius:3px;margin-top:4px;overflow:hidden}
+        .progress-bar .fill{height:100%;background:#2980b9;border-radius:3px;transition:width 0.2s}
         .add-row-btn{width:100%;padding:10px;background:#f8f9fa;border:1px dashed #999;border-radius:4px;cursor:pointer;font-size:14px}
         .add-row-btn:hover{background:#f0f0f0}
         .export-area{margin-bottom:20px;text-align:center}
@@ -380,20 +387,71 @@ function delLoc(idx){
     document.getElementById("confirmModal").style.display="flex";
 }
 
-async function uploadToTG(file,area,idx,type){
+function showStatus(area,idx,type,html,cls){
+    let el=document.getElementById(`st_${area}_${idx}_${type}`);
+    if(el){el.innerHTML=html;el.className="upload-status "+cls;}
+}
+function setProgress(area,idx,type,pct){
+    let el=document.getElementById(`pb_${area}_${idx}_${type}`);
+    if(el)el.style.width=pct+"%";
+}
+function disableUploadBtns(area,idx,disabled){
+    let types=["before","doing","after"];
+    types.forEach(t=>{
+        let btn=document.getElementById(`ubtn_${area}_${idx}_${t}`);
+        if(btn){if(disabled)btn.classList.add("disable");else btn.classList.remove("disable");}
+    });
+}
+
+function uploadToTG(file,area,idx,type){
+    showStatus(area,idx,type,"正在上传...","progress");
+    setProgress(area,idx,type,0);
+    disableUploadBtns(area,idx,true);
     let form=new FormData();
     form.append("chat_id",TG_CHAT_ID);
     form.append("photo",file);
-    try{
-        let res=await fetch(TG_API,{method:"POST",body:form});
-        let json=await res.json();
-        if(!json.ok)throw json;
-        let arr=json.result.photo;
-        let realUrl=`https://api.telegram.org/file/bot${TG_BOT_TOKEN}/${json.result.photo[arr.length-1].file_path}`;
-        updateImgData(area,idx,type,realUrl,file.name);
-    }catch(e){
-        alert("图片上传失败，请检查TG密钥");
-    }
+    let xhr=new XMLHttpRequest();
+    xhr.open("POST",TG_API,true);
+    xhr.upload.onprogress=function(e){
+        if(e.lengthComputable){
+            let pct=Math.round(e.loaded/e.total*100);
+            setProgress(area,idx,type,pct);
+            showStatus(area,idx,type,"上传中 "+pct+"%","progress");
+        }
+    };
+    xhr.onload=function(){
+        disableUploadBtns(area,idx,false);
+        try{
+            let json=JSON.parse(xhr.responseText);
+            if(!json.ok){
+                let errMsg=json.description||"未知错误";
+                showStatus(area,idx,type,"失败: "+errMsg,"error");
+                setProgress(area,idx,type,0);
+                return;
+            }
+            let arr=json.result.photo;
+            let fp=json.result.photo[arr.length-1].file_path;
+            if(!fp){
+                showStatus(area,idx,type,"失败: 未获取到file_path","error");
+                setProgress(area,idx,type,0);
+                return;
+            }
+            let realUrl=`https://api.telegram.org/file/bot${TG_BOT_TOKEN}/${fp}`;
+            updateImgData(area,idx,type,realUrl,file.name);
+            showStatus(area,idx,type,"上传成功","success");
+            setProgress(area,idx,type,100);
+            setTimeout(()=>{showStatus(area,idx,type,"","");setProgress(area,idx,type,0);},3000);
+        }catch(e){
+            showStatus(area,idx,type,"失败: 响应解析异常","error");
+            setProgress(area,idx,type,0);
+        }
+    };
+    xhr.onerror=function(){
+        disableUploadBtns(area,idx,false);
+        showStatus(area,idx,type,"失败: 网络连接异常","error");
+        setProgress(area,idx,type,0);
+    };
+    xhr.send(form);
 }
 function updateImgData(area,idx,type,url,name){
     let map={before:"bName",doing:"dName",after:"aName"};
@@ -408,6 +466,19 @@ function updateImgData(area,idx,type,url,name){
 function selectImg(area,idx,type,dom){
     let file=dom.files[0];
     if(!file)return;
+    // 文件大小检查：Telegram Bot API 限制 10MB
+    let maxSize=10*1024*1024;
+    if(file.size>maxSize){
+        showStatus(area,idx,type,"失败: 图片超过10MB","error");
+        dom.value="";
+        return;
+    }
+    // 文件类型检查
+    if(!file.type.startsWith("image/")){
+        showStatus(area,idx,type,"失败: 非图片文件","error");
+        dom.value="";
+        return;
+    }
     uploadToTG(file,area,idx,type);
     dom.value="";
 }
@@ -430,17 +501,23 @@ function renderTable(){
             <td>${item.name}</td>
             <td class="upload-cell">
                 <input type="file" class="file-input" id="f_${idx}_b" accept="image/*" onchange="selectImg('${nowArea}',${idx},'before',this)">
-                <label for="f_${idx}_b" class="upload-btn">上传图片</label>
+                <label for="f_${idx}_b" class="upload-btn" id="ubtn_${nowArea}_${idx}_before">上传图片</label>
+                <div class="progress-bar"><div class="fill" id="pb_${nowArea}_${idx}_before" style="width:0%"></div></div>
+                <div class="upload-status" id="st_${nowArea}_${idx}_before"></div>
                 ${item.before?`<img src="${item.before}" class="img-preview">`:'<p style="font-size:12px;color:#999">未上传</p>'}
             </td>
             <td class="upload-cell">
                 <input type="file" class="file-input" id="f_${idx}_d" accept="image/*" onchange="selectImg('${nowArea}',${idx},'doing',this)">
-                <label for="f_${idx}_d" class="upload-btn">上传图片</label>
+                <label for="f_${idx}_d" class="upload-btn" id="ubtn_${nowArea}_${idx}_doing">上传图片</label>
+                <div class="progress-bar"><div class="fill" id="pb_${nowArea}_${idx}_doing" style="width:0%"></div></div>
+                <div class="upload-status" id="st_${nowArea}_${idx}_doing"></div>
                 ${item.doing?`<img src="${item.doing}" class="img-preview">`:'<p style="font-size:12px;color:#999">未上传</p>'}
             </td>
             <td class="upload-cell">
                 <input type="file" class="file-input" id="f_${idx}_a" accept="image/*" onchange="selectImg('${nowArea}',${idx},'after',this)">
-                <label for="f_${idx}_a" class="upload-btn">上传图片</label>
+                <label for="f_${idx}_a" class="upload-btn" id="ubtn_${nowArea}_${idx}_after">上传图片</label>
+                <div class="progress-bar"><div class="fill" id="pb_${nowArea}_${idx}_after" style="width:0%"></div></div>
+                <div class="upload-status" id="st_${nowArea}_${idx}_after"></div>
                 ${item.after?`<img src="${item.after}" class="img-preview">`:'<p style="font-size:12px;color:#999">未上传</p>'}
             </td>
             <td class="loc-op-cell"><button class="del-loc-btn" onclick="delLoc(${idx})">删除</button></td>
