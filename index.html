@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0">
     <title>项目施工影像归档系统</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box;font-family:微软雅黑}
         body{background:#fff;padding:20px}
@@ -21,6 +20,7 @@
         .login-btn{background:#2980b9;color:#fff}
         .register-btn{background:#27ae60;color:#fff}
         .logout-btn{background:#e74c3c;color:#fff}
+        .admin-link-btn{background:#9b59b6;color:#fff}
         .project-info{background:#f8f9fa;padding:15px;border-radius:6px;margin-bottom:20px;border:1px solid #eee}
         .info-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:10px}
         .info-item label{font-size:13px;color:#666;display:block;margin-bottom:4px}
@@ -30,6 +30,7 @@
         .area-section{margin-bottom:20px;border:1px solid #ddd;border-radius:8px;overflow:hidden}
         .area-header{display:flex;justify-content:space-between;align-items:center;padding:10px 15px;background:#f0f4f8;border-bottom:1px solid #ddd}
         .area-header h3{font-size:16px;color:#333;margin:0}
+        .del-area-btn{padding:5px 12px;background:#e74c3c;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px}
 
         .main-table{width:100%;border-collapse:collapse}
         .main-table th,.main-table td{border:1px solid #ddd;padding:6px 8px;text-align:center;vertical-align:middle;font-size:13px}
@@ -46,13 +47,11 @@
         .upload-status.success{color:#27ae60}
         .file-input{display:none}
         .loc-op-cell{width:60px}
-        .del-loc-btn,.del-rec-btn{padding:3px 8px;border:none;border-radius:3px;cursor:pointer;font-size:12px}
-        .del-loc-btn{background:#e74c3c;color:#fff}
-        .del-rec-btn{background:#e67e22;color:#fff;margin-left:4px}
+        .del-loc-btn{padding:3px 8px;background:#e74c3c;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:12px}
+        .del-rec-btn{padding:2px 6px;background:#e67e22;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px;margin-left:4px}
 
         .area-bottom-bar{display:flex;justify-content:space-between;align-items:center;padding:8px 15px;background:#fafbfc;border-top:1px solid #eee}
         .add-loc-btn{padding:6px 14px;background:#27ae60;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px}
-        .del-area-btn{padding:5px 12px;background:#e74c3c;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px}
 
         .add-area-wrap{text-align:center;margin-bottom:20px}
         .add-area-btn{padding:10px 25px;border:none;border-radius:6px;cursor:pointer;font-size:15px;color:#fff;background:#e67e22}
@@ -71,7 +70,7 @@
         .modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:9999}
         .modal-content{background:#fff;padding:20px;border-radius:8px;width:85%;max-width:400px}
         .modal h4{margin-bottom:15px;font-size:16px}
-        .modal input,.modal select{width:100%;padding:8px;border:1px #ddd solid;border-radius:4px;margin:10px 0}
+        .modal input, .modal select{width:100%;padding:8px;border:1px #ddd solid;border-radius:4px;margin:10px 0}
         .modal-btn{margin-top:15px;display:flex;gap:10px;justify-content:flex-end}
         .modal-btn button{padding:6px 15px;border-radius:4px;border:none;cursor:pointer}
         .confirm{background:#27ae60;color:#fff}
@@ -80,6 +79,7 @@
         .page{display:none}
         .page.active{display:block}
 
+        /* 管理后台样式 */
         .admin-bar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:15px;align-items:center}
         .admin-bar select,.admin-bar input{padding:6px 10px;border:1px solid #ddd;border-radius:4px;font-size:13px}
         .admin-bar button{padding:6px 14px;border:none;border-radius:4px;cursor:pointer;font-size:13px;color:#fff}
@@ -142,7 +142,7 @@
         </div>
     </div>
 
-    <!-- ====== 管理后台页面 ====== -->
+    <!-- ====== 管理后台页面（超级账号可见） ====== -->
     <div class="page" id="admin-page">
         <h3 style="margin-bottom:15px">全员影像汇总管理后台</h3>
         <div class="admin-bar">
@@ -159,21 +159,49 @@
     </div>
 
     <!-- 弹窗 -->
-    <div class="modal" id="loginModal"><div class="modal-content"><h4>账户登录</h4>
-        <input type="text" id="loginUsername" placeholder="用户名"><input type="password" id="loginPassword" placeholder="密码">
-        <div class="modal-btn"><button class="cancel" onclick="closeLoginModal()">取消</button><button class="confirm" onclick="login()">登录</button></div>
-    </div></div>
-    <div class="modal" id="registerModal"><div class="modal-content"><h4>账户注册</h4>
-        <input type="text" id="registerUsername" placeholder="用户名"><input type="password" id="registerPassword" placeholder="密码"><input type="password" id="registerPassword2" placeholder="确认密码">
-        <div class="modal-btn"><button class="cancel" onclick="closeRegisterModal()">取消</button><button class="confirm" onclick="register()">注册</button></div>
-    </div></div>
-    <div class="modal" id="areaModal"><div class="modal-content"><h4>添加施工区域</h4>
-        <input type="text" id="areaName" placeholder="区域名称">
-        <div class="modal-btn"><button class="cancel" onclick="closeAreaModal()">取消</button><button class="confirm" onclick="saveArea()">确定</button></div>
-    </div></div>
-    <div class="modal" id="confirmModal"><div class="modal-content"><h4 id="confirmTitle">确认删除</h4>
-        <p id="confirmText"></p><div class="modal-btn"><button class="cancel" onclick="closeConfirmModal()">取消</button><button class="danger" id="confirmBtn">确定</button></div>
-    </div></div>
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <h4>账户登录</h4>
+            <input type="text" id="loginUsername" placeholder="用户名">
+            <input type="password" id="loginPassword" placeholder="密码">
+            <div class="modal-btn">
+                <button class="cancel" onclick="closeLoginModal()">取消</button>
+                <button class="confirm" onclick="login()">登录</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <h4>账户注册</h4>
+            <input type="text" id="registerUsername" placeholder="用户名">
+            <input type="password" id="registerPassword" placeholder="密码">
+            <input type="password" id="registerPassword2" placeholder="确认密码">
+            <div class="modal-btn">
+                <button class="cancel" onclick="closeRegisterModal()">取消</button>
+                <button class="confirm" onclick="register()">注册</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="areaModal">
+        <div class="modal-content">
+            <h4>添加施工区域</h4>
+            <input type="text" id="areaName" placeholder="区域名称">
+            <div class="modal-btn">
+                <button class="cancel" onclick="closeAreaModal()">取消</button>
+                <button class="confirm" onclick="saveArea()">确定</button>
+            </div>
+        </div>
+    </div>
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <h4 id="confirmTitle">确认删除</h4>
+            <p id="confirmText"></p>
+            <div class="modal-btn">
+                <button class="cancel" onclick="closeConfirmModal()">取消</button>
+                <button class="danger" id="confirmBtn">确定</button>
+            </div>
+        </div>
+    </div>
 
 <script>
 // ========== 配置 ==========
@@ -193,7 +221,7 @@ let locationData = {}; // { "区域": [ {name, records:[{date,before,doing,after
 // ========== 初始化 ==========
 function init(){
     initSuperAdmin();
-    var user = localStorage.getItem("currUser");
+    let user = localStorage.getItem("currUser");
     if(user){
         currentUser = user;
         isAdmin = (user === SUPER_ADMIN);
@@ -204,28 +232,18 @@ function init(){
 }
 
 function initSuperAdmin(){
-    var allUser = safeGet(USER_KEY);
+    let allUser = JSON.parse(localStorage.getItem(USER_KEY)||"{}");
     if(!allUser[SUPER_ADMIN]){
         allUser[SUPER_ADMIN] = {pwd:btoa(SUPER_PWD),info:{},area:["默认区域"],loc:{}};
-        safeSet(USER_KEY,allUser);
+        localStorage.setItem(USER_KEY,JSON.stringify(allUser));
     }
-}
-
-function safeGet(key){
-    try{return JSON.parse(localStorage.getItem(key))||{};}catch(e){return {};}
-}
-function safeGetArr(key){
-    try{return JSON.parse(localStorage.getItem(key))||[];}catch(e){return [];}
-}
-function safeSet(key,val){
-    localStorage.setItem(key,JSON.stringify(val));
 }
 
 // ========== 页面切换 ==========
 function switchPage(id){
-    document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
     document.getElementById(id).classList.add("active");
-    document.querySelectorAll(".nav-menu button").forEach(function(b){b.classList.remove("active");});
+    document.querySelectorAll(".nav-menu button").forEach(b=>b.classList.remove("active"));
     if(id==="user-page") document.getElementById("navUser").classList.add("active");
     if(id==="admin-page"){ document.getElementById("navAdmin").classList.add("active"); adminRefresh(); }
 }
@@ -237,32 +255,29 @@ function openRegisterModal(){document.getElementById("registerModal").style.disp
 function closeRegisterModal(){document.getElementById("registerModal").style.display="none"}
 
 function register(){
-    var u=document.getElementById("registerUsername").value.trim();
-    var p=document.getElementById("registerPassword").value.trim();
-    var p2=document.getElementById("registerPassword2").value.trim();
+    let u=document.getElementById("registerUsername").value.trim();
+    let p=document.getElementById("registerPassword").value.trim();
+    let p2=document.getElementById("registerPassword2").value.trim();
     if(!u||!p)return alert("账号密码不能为空");
     if(p!==p2)return alert("两次密码不一致");
     if(u===SUPER_ADMIN)return alert("该账号为系统保留");
-    var allUser=safeGet(USER_KEY);
+    let allUser=JSON.parse(localStorage.getItem(USER_KEY)||"{}");
     if(allUser[u])return alert("账号已存在");
     allUser[u]={pwd:btoa(p),info:{},area:["默认区域"],loc:{}};
-    safeSet(USER_KEY,allUser);
+    localStorage.setItem(USER_KEY,JSON.stringify(allUser));
     alert("注册成功，请登录");
     closeRegisterModal();openLoginModal();
 }
 
 function login(){
-    var u=document.getElementById("loginUsername").value.trim();
-    var p=document.getElementById("loginPassword").value.trim();
+    let u=document.getElementById("loginUsername").value.trim();
+    let p=document.getElementById("loginPassword").value.trim();
     if(u===SUPER_ADMIN && p===SUPER_PWD){
         currentUser=SUPER_ADMIN; isAdmin=true;
-        var allUser=safeGet(USER_KEY);
-        if(!allUser[SUPER_ADMIN]){
-            allUser[SUPER_ADMIN]={pwd:btoa(SUPER_PWD),info:{},area:["默认区域"],loc:{}};
-            safeSet(USER_KEY,allUser);
-        }
+        let allUser=JSON.parse(localStorage.getItem(USER_KEY)||"{}");
+        if(!allUser[SUPER_ADMIN]){allUser[SUPER_ADMIN]={pwd:btoa(SUPER_PWD),info:{},area:["默认区域"],loc:{}};localStorage.setItem(USER_KEY,JSON.stringify(allUser));}
     }else{
-        var allUser=safeGet(USER_KEY);
+        let allUser=JSON.parse(localStorage.getItem(USER_KEY)||"{}");
         if(!allUser[u])return alert("账号不存在");
         if(allUser[u].pwd!==btoa(p))return alert("密码错误");
         currentUser=u; isAdmin=false;
@@ -282,7 +297,7 @@ function logout(){
     document.getElementById("registerBtn").style.display="inline-block";
     document.getElementById("logoutBtn").style.display="none";
     document.getElementById("navAdmin").style.display="none";
-    document.querySelectorAll(".nav-menu button").forEach(function(b){b.classList.remove("active");});
+    document.querySelectorAll(".nav-menu button").forEach(b=>b.classList.remove("active"));
     document.getElementById("navUser").classList.add("active");
     switchPage("user-page");
 }
@@ -301,15 +316,16 @@ function afterLogin(){
 
 // ========== 数据读写 ==========
 function loadUserData(){
-    var d=safeGet(USER_KEY)[currentUser];
+    let allUser=JSON.parse(localStorage.getItem(USER_KEY)||"{}");
+    let d=allUser[currentUser];
     projectInfo=d.info||{};
     areaList=d.area||["默认区域"];
     locationData=d.loc||{};
 }
 function saveUserData(){
-    var allUser=safeGet(USER_KEY);
-    allUser[currentUser]={pwd:allUser[currentUser]?allUser[currentUser].pwd:"",info:projectInfo,area:areaList,loc:locationData};
-    safeSet(USER_KEY,allUser);
+    let allUser=JSON.parse(localStorage.getItem(USER_KEY)||"{}");
+    allUser[currentUser]={...allUser[currentUser],info:projectInfo,area:areaList,loc:locationData};
+    localStorage.setItem(USER_KEY,JSON.stringify(allUser));
 }
 
 function fillProjectInfo(){
@@ -332,7 +348,7 @@ function saveProjectInfo(){
 function openAreaModal(){document.getElementById("areaModal").style.display="flex"}
 function closeAreaModal(){document.getElementById("areaModal").style.display="none"}
 function saveArea(){
-    var n=document.getElementById("areaName").value.trim();
+    let n=document.getElementById("areaName").value.trim();
     if(!n)return alert("请输入区域名");
     if(!areaList.includes(n))areaList.push(n);
     if(!locationData[n])locationData[n]=[];
@@ -340,9 +356,9 @@ function saveArea(){
 }
 function deleteArea(area){
     if(areaList.length<=1)return alert("至少保留一个区域");
-    showConfirm("删除区域","删除区域「"+area+"」及所有影像数据",function(){
+    showConfirm("删除区域","删除区域「"+area+"」及所有影像数据",()=>{
         delete locationData[area];
-        areaList=areaList.filter(function(x){return x!==area;});
+        areaList=areaList.filter(x=>x!==area);
         saveUserData();renderAllAreas();
     });
 }
@@ -350,19 +366,19 @@ function deleteArea(area){
 // ========== 位置操作 ==========
 function addLocation(area){
     if(!locationData[area])locationData[area]=[];
-    var idx=locationData[area].length+1;
+    let idx=locationData[area].length+1;
     locationData[area].push({name:"位置"+idx,records:[]});
     saveUserData();renderAllAreas();
 }
 function delLoc(area,locIdx){
-    showConfirm("删除位置","删除该位置全部图片记录",function(){
+    showConfirm("删除位置","删除该位置全部图片记录",()=>{
         locationData[area].splice(locIdx,1);
-        locationData[area].forEach(function(item,i){item.name="位置"+(i+1);});
+        locationData[area].forEach((item,i)=>item.name="位置"+(i+1));
         saveUserData();renderAllAreas();
     });
 }
 function delRecord(area,locIdx,recIdx){
-    showConfirm("删除记录","删除该日期的影像记录",function(){
+    showConfirm("删除记录","删除该日期的影像记录",()=>{
         locationData[area][locIdx].records.splice(recIdx,1);
         saveUserData();renderAllAreas();
     });
@@ -371,100 +387,108 @@ function delRecord(area,locIdx,recIdx){
 function showConfirm(title,text,cb){
     document.getElementById("confirmTitle").innerText=title;
     document.getElementById("confirmText").innerText=text;
-    document.getElementById("confirmBtn").onclick=function(){cb();closeConfirmModal();};
+    document.getElementById("confirmBtn").onclick=()=>{cb();closeConfirmModal();};
     document.getElementById("confirmModal").style.display="flex";
 }
 function closeConfirmModal(){document.getElementById("confirmModal").style.display="none"}
 
-// ========== 上传 (fetch 方式，可靠兼容) ==========
-function showStatus(id,html,cls){
-    var el=document.getElementById(id);
+// ========== 上传 ==========
+function showStatus(area,locIdx,recIdx,type,html,cls){
+    let el=document.getElementById("st_"+area+"_"+locIdx+"_"+recIdx+"_"+type);
     if(el){el.innerHTML=html;el.className="upload-status "+cls;}
 }
-
-function disableUpload(area,locIdx,recIdx,disabled){
-    ["before","doing","after"].forEach(function(t){
-        var btn=document.getElementById("ubtn_"+area+"_"+locIdx+"_"+recIdx+"_"+t);
-        if(btn){ if(disabled)btn.classList.add("disable"); else btn.classList.remove("disable"); }
+function disableUploadBtns(area,locIdx,recIdx,disabled){
+    ["before","doing","after"].forEach(t=>{
+        let btn=document.getElementById("ubtn_"+area+"_"+locIdx+"_"+recIdx+"_"+t);
+        if(btn){if(disabled)btn.classList.add("disable");else btn.classList.remove("disable");}
     });
 }
 
-function getOrCreateTodayRecord(area,locIdx){
-    var today = todayStr();
-    var locs = (locationData[area]||[])[locIdx];
-    if(!locs) return [-1,false];
-    var records = locs.records||[];
-    for(var i=0;i<records.length;i++){
-        if(records[i].date===today) return [i,false];
-    }
-    var newRec = {date:today, before:"", doing:"", after:"", bName:"", dName:"", aName:"", time:""};
-    records.push(newRec);
-    return [records.length-1, true];
-}
+let pendingRecIdx = null; // 记录当前正在上传的是新增还是已有行
 
 async function uploadToTG(file,area,locIdx,recIdx,type){
-    var realRecIdx = recIdx;
-    if(recIdx===-1){
-        var result = getOrCreateTodayRecord(area,locIdx);
-        realRecIdx = result[0];
-        if(realRecIdx<0) return;
-        saveUserData();
-    }
-
-    var sid = "st_"+area+"_"+locIdx+"_"+realRecIdx+"_"+type;
-    showStatus(sid,"上传中...","progress");
-    disableUpload(area,locIdx,realRecIdx,true);
-
-    var form=new FormData();
+    showStatus(area,locIdx,recIdx,type,"0%","progress");
+    disableUploadBtns(area,locIdx,recIdx,true);
+    let form=new FormData();
     form.append("chat_id",TG_CHAT_ID);
     form.append("photo",file);
-
-    var lastError=null;
-    for(var i=0;i<TG_API_BASES.length;i++){
-        var base=TG_API_BASES[i];
-        var apiUrl=base+"/bot"+TG_BOT_TOKEN+"/sendPhoto";
+    let lastError=null;
+    for(let i=0;i<TG_API_BASES.length;i++){
+        let base=TG_API_BASES[i];
+        let apiUrl=base+"/bot"+TG_BOT_TOKEN+"/sendPhoto";
         try{
-            // 第一阶段: 上传图片
-            var resp = await fetch(apiUrl,{method:"POST",body:form});
-            var json = await resp.json();
+            let res=await fetchWithProgress(apiUrl,{method:"POST",body:form},(pct)=>{
+                showStatus(area,locIdx,recIdx,type,pct+"%","progress");
+            });
+            let json=await res.json();
             if(!json.ok){lastError=json.description||"API返回错误";continue;}
-            var fileId=json.result.photo[json.result.photo.length-1].file_id;
-
-            // 第二阶段: 获取文件路径
-            var gfResp = await fetch(base+"/bot"+TG_BOT_TOKEN+"/getFile?file_id="+fileId);
-            var gfJson = await gfResp.json();
-            if(!gfJson.ok){lastError="无法获取文件路径";continue;}
-            var fp=gfJson.result.file_path;
+            let fileId=json.result.photo[json.result.photo.length-1].file_id;
+            let getFileRes=await fetch(base+"/bot"+TG_BOT_TOKEN+"/getFile?file_id="+fileId);
+            let getFileJson=await getFileRes.json();
+            if(!getFileJson.ok){lastError="无法获取文件路径";continue;}
+            let fp=getFileJson.result.file_path;
             if(!fp){lastError="未获取到file_path";continue;}
-            var realUrl=base+"/file/bot"+TG_BOT_TOKEN+"/"+fp;
+            let realUrl=base+"/file/bot"+TG_BOT_TOKEN+"/"+fp;
 
-            // 写入数据
-            var rec=locationData[area][locIdx].records[realRecIdx];
-            rec[type]=realUrl;
-            rec[{before:"bName",doing:"dName",after:"aName"}[type]]=file.name;
-            rec.time=new Date().toLocaleString();
+            // 根据 recIdx 判断是新记录还是已有记录
+            let today=todayStr();
+            if(recIdx===-1){
+                // 新记录：push 当天记录
+                let rec={date:today,before:"",doing:"",after:"",bName:"",dName:"",aName:"",time:new Date().toLocaleString()};
+                rec[type]=realUrl;
+                rec[{before:"bName",doing:"dName",after:"aName"}[type]]=file.name;
+                locationData[area][locIdx].records.push(rec);
+            }else{
+                // 已有记录：更新
+                let rec=locationData[area][locIdx].records[recIdx];
+                rec[type]=realUrl;
+                rec[{before:"bName",doing:"dName",after:"aName"}[type]]=file.name;
+                rec.time=new Date().toLocaleString();
+            }
             saveUserData();
             syncUserImageData(area,locIdx,type,realUrl);
-
-            showStatus(sid,"完成","success");
-            setTimeout(function(){showStatus(sid,"","");},3000);
-            disableUpload(area,locIdx,realRecIdx,false);
+            showStatus(area,locIdx,recIdx===-1?locationData[area][locIdx].records.length-1:recIdx,type,"完成","success");
+            setTimeout(()=>{showStatus(area,locIdx,recIdx===-1?locationData[area][locIdx].records.length-1:recIdx,type,"","");},3000);
+            disableUploadBtns(area,locIdx,recIdx===-1?locationData[area][locIdx].records.length-1:recIdx,false);
             renderAllAreas();
             return;
         }catch(e){lastError=e.message||"网络请求失败";}
     }
-    disableUpload(area,locIdx,realRecIdx,false);
-    showStatus(sid,"失败: "+lastError,"error");
+    disableUploadBtns(area,locIdx,recIdx===-1?0:recIdx,false);
+    if(recIdx===-1){
+        // 上传失败，清理空记录
+    }
+    showStatus(area,locIdx,recIdx===-1?locationData[area][locIdx].records.length-1:recIdx,type,"失败: "+lastError,"error");
+}
+
+function fetchWithProgress(url,options,onProgress){
+    return new Promise((resolve,reject)=>{
+        let xhr=new XMLHttpRequest();
+        xhr.open(options.method||"GET",url,true);xhr.responseType="text";
+        if(options.headers){for(let k in options.headers)xhr.setRequestHeader(k,options.headers[k]);}
+        xhr.upload.onprogress=function(e){if(e.lengthComputable&&onProgress)onProgress(Math.round(e.loaded/e.total*100));};
+        xhr.onload=function(){
+            if(xhr.status>=200&&xhr.status<300)resolve({ok:true,status:xhr.status,text:()=>Promise.resolve(xhr.responseText),json:()=>Promise.resolve(JSON.parse(xhr.responseText))});
+            else reject(new Error("HTTP "+xhr.status));
+        };
+        xhr.onerror=function(){reject(new Error("网络请求失败"));};
+        xhr.send(options.body);
+    });
 }
 
 function syncUserImageData(area,locIdx,type,imgUrl){
-    var totalAllData=safeGetArr("all_user_images");
-    totalAllData.push({username:currentUser,area:area,locIdx:locIdx,imgType:type,imgUrl:imgUrl,uploadTime:new Date().toISOString(),projectInfo:JSON.parse(JSON.stringify(projectInfo))});
-    safeSet("all_user_images",totalAllData);
+    let totalAllData=JSON.parse(localStorage.getItem("all_user_images")||"[]");
+    totalAllData.push({username:currentUser,area:area,locIdx:locIdx,imgType:type,imgUrl:imgUrl,uploadTime:new Date().toISOString(),projectInfo:{...projectInfo}});
+    localStorage.setItem("all_user_images",JSON.stringify(totalAllData));
+}
+
+function todayStr(){
+    let d=new Date();
+    return d.getFullYear()+"-"+(d.getMonth()+1).toString().padStart(2,"0")+"-"+d.getDate().toString().padStart(2,"0");
 }
 
 async function selectImg(area,locIdx,recIdx,type,dom){
-    var file=dom.files[0];
+    let file=dom.files[0];
     if(!file)return;
     if(file.size>10*1024*1024){alert("图片超过10MB");dom.value="";return;}
     if(!file.type.startsWith("image/")){alert("非图片文件");dom.value="";return;}
@@ -474,123 +498,86 @@ async function selectImg(area,locIdx,recIdx,type,dom){
 
 // ========== 渲染 ==========
 function renderAllAreas(){
-    var container=document.getElementById("areasContainer");
+    let container=document.getElementById("areasContainer");
     if(!container)return;
     container.innerHTML="";
-    areaList.forEach(function(area){
-        var locs=locationData[area]||[];
-        var rows="";
-
-        locs.forEach(function(loc,locIdx){
-            var records=loc.records||[];
+    areaList.forEach(area=>{
+        let locs=locationData[area]||[];
+        let rows="";
+        locs.forEach((loc,locIdx)=>{
+            let records=loc.records||[];
             if(records.length===0){
-                rows+=makeEmptyRow(area,loc.name,locIdx);
+                // 没有记录的行，用于上传新记录（recIdx=-1）
+                rows+='<tr>'+
+                    '<td rowspan="1" style="font-weight:bold">'+area+'</td>'+
+                    '<td rowspan="1" style="font-weight:bold">'+loc.name+'</td>'+
+                    '<td style="color:#999">'+todayStr()+'</td>'+
+                    '<td class="upload-cell">'+
+                        '<div class="no-img">未上传</div>'+
+                        '<input type="file" class="file-input" id="f_'+area+'_'+locIdx+'_-1_b" accept="image/*" onchange="selectImg(\''+area+'\','+locIdx+',-1,\'before\',this)">'+
+                        '<label for="f_'+area+'_'+locIdx+'_-1_b" class="upload-btn" id="ubtn_'+area+'_'+locIdx+'_-1_before">上传</label>'+
+                        '<div class="upload-status" id="st_'+area+'_'+locIdx+'_-1_before"></div>'+
+                    '</td>'+
+                    '<td class="upload-cell">'+
+                        '<div class="no-img">未上传</div>'+
+                        '<input type="file" class="file-input" id="f_'+area+'_'+locIdx+'_-1_d" accept="image/*" onchange="selectImg(\''+area+'\','+locIdx+',-1,\'doing\',this)">'+
+                        '<label for="f_'+area+'_'+locIdx+'_-1_d" class="upload-btn" id="ubtn_'+area+'_'+locIdx+'_-1_doing">上传</label>'+
+                        '<div class="upload-status" id="st_'+area+'_'+locIdx+'_-1_doing"></div>'+
+                    '</td>'+
+                    '<td class="upload-cell">'+
+                        '<div class="no-img">未上传</div>'+
+                        '<input type="file" class="file-input" id="f_'+area+'_'+locIdx+'_-1_a" accept="image/*" onchange="selectImg(\''+area+'\','+locIdx+',-1,\'after\',this)">'+
+                        '<label for="f_'+area+'_'+locIdx+'_-1_a" class="upload-btn" id="ubtn_'+area+'_'+locIdx+'_-1_after">上传</label>'+
+                        '<div class="upload-status" id="st_'+area+'_'+locIdx+'_-1_after"></div>'+
+                    '</td>'+
+                    '<td class="loc-op-cell"><button class="del-loc-btn" onclick="delLoc(\''+area+'\','+locIdx+')">删除</button></td>'+
+                '</tr>';
             }else{
-                records.forEach(function(rec,recIdx){
-                    rows+=makeRecRow(area,loc.name,locIdx,rec,recIdx,records.length);
+                records.forEach((rec,recIdx)=>{
+                    let map={before:"bName",doing:"dName",after:"aName"};
+                    rows+='<tr>'+
+                        (recIdx===0?'<td rowspan="'+records.length+'" style="font-weight:bold">'+area+'</td><td rowspan="'+records.length+'" style="font-weight:bold">'+loc.name+'</td>':'')+
+                        '<td>'+rec.date+'</td>'+
+                        '<td class="upload-cell">'+
+                            (rec.before?'<img src="'+rec.before+'" class="img-preview">':'<div class="no-img">未上传</div>')+
+                            '<input type="file" class="file-input" id="f_'+area+'_'+locIdx+'_'+recIdx+'_b" accept="image/*" onchange="selectImg(\''+area+'\','+locIdx+','+recIdx+',\'before\',this)">'+
+                            '<label for="f_'+area+'_'+locIdx+'_'+recIdx+'_b" class="upload-btn" id="ubtn_'+area+'_'+locIdx+'_'+recIdx+'_before">上传</label>'+
+                            '<div class="upload-status" id="st_'+area+'_'+locIdx+'_'+recIdx+'_before"></div>'+
+                        '</td>'+
+                        '<td class="upload-cell">'+
+                            (rec.doing?'<img src="'+rec.doing+'" class="img-preview">':'<div class="no-img">未上传</div>')+
+                            '<input type="file" class="file-input" id="f_'+area+'_'+locIdx+'_'+recIdx+'_d" accept="image/*" onchange="selectImg(\''+area+'\','+locIdx+','+recIdx+',\'doing\',this)">'+
+                            '<label for="f_'+area+'_'+locIdx+'_'+recIdx+'_d" class="upload-btn" id="ubtn_'+area+'_'+locIdx+'_'+recIdx+'_doing">上传</label>'+
+                            '<div class="upload-status" id="st_'+area+'_'+locIdx+'_'+recIdx+'_doing"></div>'+
+                        '</td>'+
+                        '<td class="upload-cell">'+
+                            (rec.after?'<img src="'+rec.after+'" class="img-preview">':'<div class="no-img">未上传</div>')+
+                            '<input type="file" class="file-input" id="f_'+area+'_'+locIdx+'_'+recIdx+'_a" accept="image/*" onchange="selectImg(\''+area+'\','+locIdx+','+recIdx+',\'after\',this)">'+
+                            '<label for="f_'+area+'_'+locIdx+'_'+recIdx+'_a" class="upload-btn" id="ubtn_'+area+'_'+locIdx+'_'+recIdx+'_after">上传</label>'+
+                            '<div class="upload-status" id="st_'+area+'_'+locIdx+'_'+recIdx+'_after"></div>'+
+                        '</td>'+
+                        (recIdx===0?'<td rowspan="'+records.length+'" class="loc-op-cell"><button class="del-loc-btn" onclick="delLoc(\''+area+'\','+locIdx+')">删除</button></td>':'')+
+                    '</tr>';
                 });
             }
         });
 
-        var section=document.createElement("div");
+        let section=document.createElement("div");
         section.className="area-section";
         section.innerHTML=
-            '<div class="area-header"><h3>'+escapeHtml(area)+'</h3></div>'+
+            '<div class="area-header"><h3>'+area+'</h3></div>'+
             '<table class="main-table"><thead><tr><th>区域</th><th>位置</th><th>日期</th><th>施工前</th><th>施工中</th><th>施工后</th><th>操作</th></tr></thead><tbody>'+rows+'</tbody></table>'+
-            '<div class="area-bottom-bar"><button class="add-loc-btn" onclick="addLocation(\''+escJs(area)+'\')">＋ 添加位置</button><button class="del-area-btn" onclick="deleteArea(\''+escJs(area)+'\')">删除区域</button></div>';
+            '<div class="area-bottom-bar"><button class="add-loc-btn" onclick="addLocation(\''+area+'\')">＋ 添加位置</button><button class="del-area-btn" onclick="deleteArea(\''+area+'\')">删除区域</button></div>';
         container.appendChild(section);
     });
 }
 
-function makeEmptyRow(area,locName,locIdx){
-    var a=escJs(area), ln=escJs(locName);
-    return '<tr>'+
-        '<td style="font-weight:bold">'+escapeHtml(area)+'</td>'+
-        '<td style="font-weight:bold">'+escapeHtml(locName)+'</td>'+
-        '<td style="color:#999">'+todayStr()+'</td>'+
-        makeUploadCell(a,locIdx,-1,"before")+
-        makeUploadCell(a,locIdx,-1,"doing")+
-        makeUploadCell(a,locIdx,-1,"after")+
-        '<td class="loc-op-cell"><button class="del-loc-btn" onclick="delLoc(\''+a+'\','+locIdx+')">删除</button></td>'+
-    '</tr>';
-}
-
-function makeRecRow(area,locName,locIdx,rec,recIdx,totalRecs){
-    var a=escJs(area);
-    var rowspanStr = (recIdx===0) ?
-        '<td rowspan="'+totalRecs+'" style="font-weight:bold">'+escapeHtml(area)+'</td><td rowspan="'+totalRecs+'" style="font-weight:bold">'+escapeHtml(locName)+'</td>' : '';
-    var opStr = (recIdx===0) ?
-        '<td rowspan="'+totalRecs+'" class="loc-op-cell"><button class="del-loc-btn" onclick="delLoc(\''+a+'\','+locIdx+')">删除</button></td>' : '';
-
-    return '<tr>'+rowspanStr+
-        '<td>'+escapeHtml(rec.date)+'</td>'+
-        makeUploadCell(a,locIdx,recIdx,"before",rec.before)+
-        makeUploadCell(a,locIdx,recIdx,"doing",rec.doing)+
-        makeUploadCell(a,locIdx,recIdx,"after",rec.after)+
-        opStr+
-    '</tr>';
-}
-
-function makeUploadCell(area,locIdx,recIdx,type,imgUrl){
-    var a=area, li=locIdx, ri=recIdx, t=type;
-    var preview = imgUrl ? '<img src="'+imgUrl+'" class="img-preview" onerror="this.style.display=\'none\'">' : '<div class="no-img">未上传</div>';
-    return '<td class="upload-cell">'+
-        preview+
-        '<input type="file" class="file-input" id="f_'+a+'_'+li+'_'+ri+'_'+t+'" accept="image/*" onchange="selectImg(\''+a+'\','+li+','+ri+',\''+t+'\',this)">'+
-        '<label for="f_'+a+'_'+li+'_'+ri+'_'+t+'" class="upload-btn" id="ubtn_'+a+'_'+li+'_'+ri+'_'+t+'">上传</label>'+
-        '<div class="upload-status" id="st_'+a+'_'+li+'_'+ri+'_'+t+'"></div>'+
-    '</td>';
-}
-
-function escapeHtml(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
-function escJs(s){ return s.replace(/\\/g,"\\\\").replace(/'/g,"\\'").replace(/"/g,"\\\""); }
-
-// ========== 日期工具 ==========
-function todayStr(){
-    var d=new Date();
-    return d.getFullYear()+"-"+(d.getMonth()+1).toString().padStart(2,"0")+"-"+d.getDate().toString().padStart(2,"0");
-}
-function toDateStr(d){
-    return d.getFullYear()+"-"+(d.getMonth()+1).toString().padStart(2,"0")+"-"+d.getDate().toString().padStart(2,"0");
-}
-function matchDateRange(dateStr,type){
-    var today=todayStr();
-    if(type==="daily") return dateStr===today;
-    if(type==="weekly"){
-        var now=new Date();
-        var day=now.getDay(); day=day===0?7:day;
-        var mon=new Date(now); mon.setDate(now.getDate()-day+1);
-        var sun=new Date(now); sun.setDate(now.getDate()+7-day);
-        return dateStr>=toDateStr(mon) && dateStr<=toDateStr(sun);
-    }
-    if(type==="monthly"){
-        var now=new Date();
-        var first=now.getFullYear()+"-"+(now.getMonth()+1).toString().padStart(2,"0")+"-01";
-        return dateStr>=first;
-    }
-    return true;
-}
-
-// ========== 下载图片为 base64 ==========
-async function downloadImgAsBase64(url){
-    try{
-        var resp=await fetch(url);
-        if(!resp.ok)return null;
-        var blob=await resp.blob();
-        return new Promise(function(resolve){
-            var reader=new FileReader();
-            reader.onloadend=function(){resolve(reader.result);};
-            reader.readAsDataURL(blob);
-        });
-    }catch(e){return null;}
-}
-
-// ========== 我的导出 (ExcelJS, 嵌入图片) ==========
-async function exportMyExcel(type){
-    var allData=[];
-    Object.keys(locationData).forEach(function(area){
-        (locationData[area]||[]).forEach(function(loc){
-            (loc.records||[]).forEach(function(rec){
+// ========== 我的导出 ==========
+function exportMyExcel(type){
+    let allData=[];
+    Object.keys(locationData).forEach(area=>{
+        (locationData[area]||[]).forEach(loc=>{
+            (loc.records||[]).forEach(rec=>{
                 if(matchDateRange(rec.date,type)){
                     allData.push({area:area,loc:loc.name,date:rec.date,before:rec.before||"",doing:rec.doing||"",after:rec.after||"",time:rec.time});
                 }
@@ -598,119 +585,60 @@ async function exportMyExcel(type){
         });
     });
     if(allData.length===0)return alert("暂无数据");
-
-    // 下载所有图片
-    var imgMap={};
-    var urls=[];
-    allData.forEach(function(d){["before","doing","after"].forEach(function(k){if(d[k])urls.push(d[k]);});});
-    urls=[...new Set(urls)];
-    for(var i=0;i<urls.length;i++){
-        var b64=await downloadImgAsBase64(urls[i]);
-        if(b64)imgMap[urls[i]]=b64;
-    }
-
-    var wb=new ExcelJS.Workbook();
-    // Sheet1: 项目信息
-    var wsInfo=wb.addWorksheet("项目信息");
-    wsInfo.addRows([
-        ["项目名称",projectInfo.projectName||""],
-        ["施工单位",projectInfo.buildCompany||""],
-        ["负责人",projectInfo.projectLeader||""]
-    ]);
-    wsInfo.getColumn(1).width=14; wsInfo.getColumn(2).width=30;
-
-    // Sheet2: 影像记录
-    var ws=wb.addWorksheet("影像记录");
-    ws.columns=[
-        {header:"区域",key:"area",width:14},
-        {header:"位置",key:"loc",width:12},
-        {header:"日期",key:"date",width:14},
-        {header:"施工前",key:"before",width:28},
-        {header:"施工中",key:"doing",width:28},
-        {header:"施工后",key:"after",width:28},
-        {header:"上传时间",key:"time",width:22}
-    ];
-
-    var rowH=80;
-    for(var r=0;r<allData.length;r++){
-        var d=allData[r];
-        ws.addRow({area:d.area,loc:d.loc,date:d.date,time:d.time});
-        ws.getRow(r+2).height=rowH;
-    }
-
-    // 嵌入图片
-    ["before","doing","after"].forEach(function(k,colIdx){
-        var col=k==="before"?4:(k==="doing"?5:6);
-        for(var r=0;r<allData.length;r++){
-            var url=allData[r][k];
-            if(!url)continue;
-            var b64=imgMap[url];
-            if(!b64)continue;
-            var imgId=wb.addImage({base64:b64,extension:"png"});
-            ws.addImage(imgId,{
-                tl:{col:colIdx-1,row:r+1},
-                ext:{width:140,height:70}
-            });
-        }
-    });
-
-    // 冻结首行 & 样式
-    ws.views=[{state:"frozen",ySplit:1}];
-    var hRow=ws.getRow(1);
-    hRow.height=22;
-    hRow.font={bold:true,size:12};
-    hRow.alignment={vertical:"middle",horizontal:"center"};
-
-    // 居中
-    ws.eachRow(function(row,rn){
-        row.eachCell(function(cell){cell.alignment={vertical:"middle",horizontal:"center"};});
-    });
-
-    // 边框
-    for(var rr=1;rr<=allData.length+1;rr++){
-        var row=ws.getRow(rr);
-        row.eachCell(function(cell){
-            cell.border={
-                top:{style:"thin"},bottom:{style:"thin"},
-                left:{style:"thin"},right:{style:"thin"}
-            };
-        });
-    }
-
-    var typeName={daily:"日报",weekly:"周报",monthly:"月报",all:"全部"}[type];
-    var buf=await wb.xlsx.writeBuffer();
-    downloadBlob(buf,"施工影像"+typeName+"_"+todayStr()+".xlsx");
+    doExport(allData,"施工影像归档");
 }
 
-function downloadBlob(buf,filename){
-    var blob=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-    var url=URL.createObjectURL(blob);
-    var a=document.createElement("a");
-    a.href=url;a.download=filename;a.click();
-    URL.revokeObjectURL(url);
+function matchDateRange(dateStr,type){
+    let d=dateStr;
+    let today=todayStr();
+    if(type==="daily") return d===today;
+    if(type==="weekly"){
+        let now=new Date();
+        let day=now.getDay(); day=day===0?7:day;
+        let mon=new Date(now); mon.setDate(now.getDate()-day+1);
+        let sun=new Date(now); sun.setDate(now.getDate()+7-day);
+        return d>=toDateStr(mon) && d<=toDateStr(sun);
+    }
+    if(type==="monthly"){
+        let now=new Date();
+        let first=now.getFullYear()+"-"+(now.getMonth()+1).toString().padStart(2,"0")+"-01";
+        let last=now.getFullYear()+"-"+(now.getMonth()+1).toString().padStart(2,"0")+"-31";
+        return d>=first && d<=last;
+    }
+    return true;
+}
+function toDateStr(d){return d.getFullYear()+"-"+(d.getMonth()+1).toString().padStart(2,"0")+"-"+d.getDate().toString().padStart(2,"0");}
+
+function doExport(data,prefix){
+    let wb=XLSX.utils.book_new();
+    let base=[["项目名称",projectInfo.projectName||""],["施工单位",projectInfo.buildCompany||""],["负责人",projectInfo.projectLeader||""]];
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(base),"项目信息");
+    let head=["区域","位置","日期","施工前照片链接","施工中照片链接","施工后照片链接","上传时间"];
+    let sd=[head];
+    data.forEach(d=>sd.push([d.area,d.loc,d.date,d.before,d.doing,d.after,d.time]));
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sd),"影像记录");
+    XLSX.writeFile(wb,prefix+"_"+new Date().toLocaleDateString()+".xlsx");
 }
 
 // ========== 管理后台 ==========
 function adminRefresh(){
-    var allData=safeGetArr("all_user_images");
-    var users=[];
-    allData.forEach(function(d){if(users.indexOf(d.username)===-1)users.push(d.username);});
-    var sel=document.getElementById("adminUserFilter");
+    let allData=JSON.parse(localStorage.getItem("all_user_images")||"[]");
+    // 填充用户筛选下拉
+    let users=[...new Set(allData.map(d=>d.username))];
+    let sel=document.getElementById("adminUserFilter");
     sel.innerHTML='<option value="">全部用户</option>';
-    users.forEach(function(u){
-        var op=document.createElement("option");op.value=u;op.innerText=u;sel.appendChild(op);
-    });
+    users.forEach(u=>{let op=document.createElement("option");op.value=u;op.innerText=u;sel.appendChild(op);});
     adminRender(allData);
 }
 
 function adminFilter(){
-    var allData=safeGetArr("all_user_images");
-    var user=document.getElementById("adminUserFilter").value;
-    var from=document.getElementById("adminDateFrom").value;
-    var to=document.getElementById("adminDateTo").value;
-    var filtered=allData.filter(function(d){
+    let allData=JSON.parse(localStorage.getItem("all_user_images")||"[]");
+    let user=document.getElementById("adminUserFilter").value;
+    let from=document.getElementById("adminDateFrom").value;
+    let to=document.getElementById("adminDateTo").value;
+    let filtered=allData.filter(d=>{
         if(user && d.username!==user) return false;
-        var dt=d.uploadTime.substr(0,10);
+        let dt=d.uploadTime.substr(0,10);
         if(from && dt<from) return false;
         if(to && dt>to) return false;
         return true;
@@ -719,88 +647,55 @@ function adminFilter(){
 }
 
 function adminRender(arr){
-    var dom=document.getElementById("adminList");
+    let dom=document.getElementById("adminList");
     dom.innerHTML="";
     if(arr.length===0){dom.innerHTML='<p style="color:#999;margin-top:20px">暂无数据</p>';return;}
-    arr.forEach(function(item){
-        var typeText={before:"施工前",doing:"施工中",after:"施工后"}[item.imgType];
-        var card=document.createElement("div");
+    arr.forEach(item=>{
+        let typeText={before:"施工前",doing:"施工中",after:"施工后"}[item.imgType];
+        let card=document.createElement("div");
         card.className="admin-card";
-        card.innerHTML='<p><b>用户：</b>'+escapeHtml(item.username)+'</p><p><b>区域：</b>'+escapeHtml(item.area||"")+'</p><p><b>阶段：</b>'+typeText+'</p><p><b>时间：</b>'+item.uploadTime.substr(0,10)+'</p><img src="'+item.imgUrl+'" onerror="this.style.display=\'none\'"><p><a href="'+item.imgUrl+'" target="_blank">查看原图</a></p>';
+        card.innerHTML='<p><b>用户：</b>'+item.username+'</p><p><b>区域：</b>'+(item.area||"")+'</p><p><b>阶段：</b>'+typeText+'</p><p><b>时间：</b>'+item.uploadTime.substr(0,10)+'</p><img src="'+item.imgUrl+'" onerror="this.style.display=\'none\'"><p><a href="'+item.imgUrl+'" target="_blank">查看原图</a></p>';
         dom.appendChild(card);
     });
 }
 
-async function exportAdminExcel(type){
-    var allData=safeGetArr("all_user_images");
-    var user=document.getElementById("adminUserFilter").value;
-    var from=document.getElementById("adminDateFrom").value;
-    var to=document.getElementById("adminDateTo").value;
-    var filtered=allData.filter(function(d){
+function exportAdminExcel(type){
+    let allData=JSON.parse(localStorage.getItem("all_user_images")||"[]");
+    let user=document.getElementById("adminUserFilter").value;
+    let from=document.getElementById("adminDateFrom").value;
+    let to=document.getElementById("adminDateTo").value;
+    let filtered=allData.filter(d=>{
         if(user && d.username!==user) return false;
-        var dt=d.uploadTime.substr(0,10);
+        let dt=d.uploadTime.substr(0,10);
+        // 时间范围（from/to 手动输入）
         if(from && dt<from) return false;
         if(to && dt>to) return false;
+        // type 快捷筛选
         if(type==="daily") return dt===todayStr();
         if(type==="weekly"){
-            var now=new Date();var day=now.getDay();day=day===0?7:day;
-            var mon=new Date(now);mon.setDate(now.getDate()-day+1);
-            var sun=new Date(now);sun.setDate(now.getDate()+7-day);
+            let now=new Date();let day=now.getDay();day=day===0?7:day;
+            let mon=new Date(now);mon.setDate(now.getDate()-day+1);
+            let sun=new Date(now);sun.setDate(now.getDate()+7-day);
             return dt>=toDateStr(mon) && dt<=toDateStr(sun);
         }
         if(type==="monthly"){
-            var now=new Date();
-            var first=now.getFullYear()+"-"+(now.getMonth()+1).toString().padStart(2,"0")+"-01";
+            let now=new Date();
+            let first=now.getFullYear()+"-"+(now.getMonth()+1).toString().padStart(2,"0")+"-01";
             return dt>=first;
         }
         return true;
     });
     if(filtered.length===0)return alert("暂无匹配数据");
-
-    // 下载图片
-    var imgMap={};
-    var urls=[...new Set(filtered.map(function(d){return d.imgUrl;}))];
-    for(var i=0;i<urls.length;i++){
-        var b64=await downloadImgAsBase64(urls[i]);
-        if(b64)imgMap[urls[i]]=b64;
-    }
-
-    var typeName={daily:"日报",weekly:"周报",monthly:"月报",all:"全部"}[type];
-    var wb=new ExcelJS.Workbook();
-    var ws=wb.addWorksheet("全员影像");
-    ws.columns=[
-        {header:"用户",key:"user",width:14},
-        {header:"区域",key:"area",width:14},
-        {header:"施工阶段",key:"stage",width:14},
-        {header:"照片",key:"photo",width:28},
-        {header:"上传时间",key:"time",width:22}
-    ];
-    ws.getRow(1).font={bold:true,size:12};
-
-    for(var r=0;r<filtered.length;r++){
-        var d=filtered[r];
-        var stageTxt={before:"施工前",doing:"施工中",after:"施工后"}[d.imgType];
-        ws.addRow({user:d.username,area:d.area||"",stage:stageTxt,time:d.uploadTime});
-        ws.getRow(r+2).height=80;
-        ws.getRow(r+2).alignment={vertical:"middle",horizontal:"center"};
-
-        var b64=imgMap[d.imgUrl];
-        if(b64){
-            var imgId=wb.addImage({base64:b64,extension:"png"});
-            ws.addImage(imgId,{tl:{col:3,row:r+1},ext:{width:140,height:70}});
-        }
-    }
-
-    ws.views=[{state:"frozen",ySplit:1}];
-    for(var rr2=1;rr2<=filtered.length+1;rr2++){
-        ws.getRow(rr2).eachCell(function(cell){
-            cell.border={top:{style:"thin"},bottom:{style:"thin"},left:{style:"thin"},right:{style:"thin"}};
-            cell.alignment={vertical:"middle",horizontal:"center"};
-        });
-    }
-
-    var buf=await wb.xlsx.writeBuffer();
-    downloadBlob(buf,"全员影像"+typeName+"_"+todayStr()+".xlsx");
+    let typeName={daily:"日报",weekly:"周报",monthly:"月报",all:"全部"}[type];
+    let wb=XLSX.utils.book_new();
+    let head=["用户","区域","施工阶段","图片链接","上传时间"];
+    let sd=[head];
+    filtered.forEach(d=>{
+        let typeText={before:"施工前",doing:"施工中",after:"施工后"}[d.imgType];
+        sd.push([d.username,d.area||"",typeText,d.imgUrl,d.uploadTime]);
+    });
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(sd),"全员影像");
+    XLSX.writeFile(wb,"全员影像"+typeName+"_"+new Date().toLocaleDateString()+".xlsx");
 }
 
 window.onload=init;
