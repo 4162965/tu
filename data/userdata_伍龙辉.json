@@ -1,0 +1,37 @@
+{
+  "areas": [
+    "六祖大道"
+  ],
+  "locations": {
+    "六祖大道": [
+      {
+        "name": "位置1",
+        "records": [
+          {
+            "date": "2026-05-24",
+            "before": "https://1000006.xyz/file/bot8427494834:AAGN47L0zLR_tSNL_ObBse1FbJjUfUAqegQ/photos/file_317.jpg",
+            "doing": "",
+            "after": "",
+            "bName": "21f5f180-77f2-4813-ab58-625e499987a0.png",
+            "dName": "",
+            "aName": ""
+          }
+        ]
+      },
+      {
+        "name": "位置2",
+        "records": [
+          {
+            "date": "2026-05-24",
+            "before": "https://1000006.xyz/file/bot8427494834:AAGN47L0zLR_tSNL_ObBse1FbJjUfUAqegQ/photos/file_318.jpg",
+            "doing": "",
+            "after": "",
+            "bName": "sd夏日酷爽清凉图标（附参数）_1_十鲵_来自小红书网页版.jpg",
+            "dName": "",
+            "aName": ""
+          }
+        ]
+      }
+    ]
+  }
+}
