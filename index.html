@@ -311,9 +311,9 @@ body{background:#f0f2f5;min-height:100vh;overflow-x:hidden;-webkit-text-size-adj
             <span class="tip-text">选择日期范围查看各天所有账号影像汇总</span>
             <div class="admin-filters">
                 <select id="adminSiteFilter" onchange="renderAdmin()"><option value="">全部网点</option></select>
-                <input type="date" id="adminDateFrom" onchange="renderAdmin()" value="2026-05-20">
+                <input type="date" id="adminDateFrom" onchange="renderAdmin()">
                 <span class="sep">至</span>
-                <input type="date" id="adminDateTo" onchange="renderAdmin()" value="2026-05-24">
+                <input type="date" id="adminDateTo" onchange="renderAdmin()">
                 <button class="btn-refresh" onclick="renderAdmin()">刷新</button>
                 <button class="btn-refresh" onclick="showMemberManagement()" style="background:#27ae60">成员管理</button>
                 <button class="btn-refresh" onclick="openModal('syncConfigModal')" style="background:#e67e22">☁ 同步</button>
@@ -2043,10 +2043,10 @@ function renderAdmin() {
             };
 
             let userCell = isFirstUser ? '<td class="td-user" rowspan="'+userSpans[d.user]+'">'+(DEMO.registeredUsers[d.user] && DEMO.registeredUsers[d.user].displayName || d.user)+'</td>' : '';
-            let areaCell = isFirstArea ? '<td class="td-area" rowspan="'+areaSpans[d.user+"|"+d.area]+'">'+d.area+'<br><button onclick=\'deleteAdminArea('+JSON.stringify(d.user)+','+JSON.stringify(d.area)+')\' style="margin-top:4px;padding:1px 5px;background:#c0392b;color:#fff;border:none;border-radius:2px;cursor:pointer;font-size:9px" title="删除该区域所有数据">删除区域</button></td>' : '';
+            let areaCell = isFirstArea ? '<td class="td-area" rowspan="'+areaSpans[d.user+"|"+d.area]+'">'+d.area+'</td>' : '';
 
             desktopRows += '<tr>' + userCell + areaCell +
-                '<td class="td-loc">'+d.loc+'<br><button onclick=\'deleteAdminLocation('+JSON.stringify(d.user)+','+JSON.stringify(d.area)+','+JSON.stringify(d.loc)+')\' style="margin-top:2px;padding:1px 5px;background:#e67e22;color:#fff;border:none;border-radius:2px;cursor:pointer;font-size:9px" title="删除该位置所有数据">删除位置</button></td>' +
+                '<td class="td-loc">'+d.loc+'</td>' +
                 makeThumb(d.before, true) +
                 makeThumb(d.doing, false) +
                 makeThumb(d.after, false) +
@@ -2071,8 +2071,6 @@ function renderAdmin() {
                     '</div>' +
                     '<div style="text-align:right;margin-top:6px;display:flex;gap:4px;justify-content:flex-end;flex-wrap:wrap">' +
                         '<button onclick=\'deleteAdminRecord('+JSON.stringify(d.user)+','+JSON.stringify(d.area)+','+JSON.stringify(d.loc)+','+JSON.stringify(d.date)+')\' style="padding:2px 8px;background:#e74c3c;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px">删除此条</button>' +
-                    ' <button onclick=\'deleteAdminLocation('+JSON.stringify(d.user)+','+JSON.stringify(d.area)+','+JSON.stringify(d.loc)+')\' style="padding:2px 8px;background:#e67e22;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px">删除位置</button>' +
-                    ' <button onclick=\'deleteAdminArea('+JSON.stringify(d.user)+','+JSON.stringify(d.area)+')\' style="padding:2px 8px;background:#c0392b;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px">删除区域</button>' +
                     '</div></div>';
         });
 
@@ -2342,6 +2340,8 @@ function initLoginEnterKey() {
 
 window.onload = function() {
     document.getElementById("viewDate").value = todayStr();
+    document.getElementById("adminDateFrom").value = todayStr();
+    document.getElementById("adminDateTo").value = todayStr();
     initLoginEnterKey();
     loadData();
     syncManager.loadConfig();
