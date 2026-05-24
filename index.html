@@ -820,11 +820,9 @@ const syncManager = {
                 let content = decodeURIComponent(escape(atob(fileInfo.content)));
                 let regUsersData = JSON.parse(content);
                 
-                // 合并注册用户表（云端优先）
+                // 云端注册用户表为权威源，完全替换本地（防止已删除成员因云端旧数据重新出现）
                 if (regUsersData.registeredUsers) {
-                    for (let username in regUsersData.registeredUsers) {
-                        DEMO.registeredUsers[username] = regUsersData.registeredUsers[username];
-                    }
+                    DEMO.registeredUsers = regUsersData.registeredUsers;
                 }
             }
             
@@ -1786,8 +1784,6 @@ async function uploadDemo(input, area, locIdx, type) {
 
 function syncToAdminData(area, locName, date, before, doing, after) {
     let userName = DEMO.currentUser || DEMO.userDisplayName;
-    // 管理员数据不同步到管理后台
-    if (userName === "admin") return;
     DEMO.adminData = DEMO.adminData.filter(d =>
         !(d.user === userName && d.area === area && d.loc === locName && d.date === date));
     if (before || doing || after) {
@@ -1959,9 +1955,8 @@ function renderAdmin() {
     let to = document.getElementById("adminDateTo").value;
     let site = document.getElementById("adminSiteFilter").value;
 
-    // 过滤：排除超级管理员 (admin) 的数据
+    // 过滤：包含所有用户数据（包括超级管理员）
     let filtered = DEMO.adminData.filter(d => {
-        if (d.user === "admin") return false;
         if (site && d.area !== site) return false;
         if (from && d.date < from) return false;
         if (to && d.date > to) return false;
@@ -1978,7 +1973,7 @@ function renderAdmin() {
 
     let siteSel = document.getElementById("adminSiteFilter");
     if (siteSel.options.length <= 1) {
-        [...new Set(DEMO.adminData.filter(d => d.user !== "admin").map(d => d.area))].forEach(s => {
+        [...new Set(DEMO.adminData.map(d => d.area))].forEach(s => {
             let opt = document.createElement("option"); opt.value = s; opt.innerText = s; siteSel.appendChild(opt);
         });
     }
@@ -2138,7 +2133,6 @@ function collectAdminExportData(type) {
     let monthStart = now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-01";
 
     DEMO.adminData.forEach(d => {
-        if (d.user === "admin") return;
         if (type === "daily" && d.date !== todayStr()) return;
         if (type === "weekly" && (d.date < weekRange.from || d.date > weekRange.to)) return;
         if (type === "monthly" && d.date < monthStart) return;
