@@ -1,0 +1,37 @@
+{
+  "areas": [
+    "六祖大道"
+  ],
+  "locations": {
+    "六祖大道": [
+      {
+        "name": "位置1",
+        "records": [
+          {
+            "date": "2026-05-24",
+            "before": "https://1000006.xyz/file/bot8427494834:AAGN47L0zLR_tSNL_ObBse1FbJjUfUAqegQ/photos/file_322.jpg",
+            "doing": "https://1000006.xyz/file/bot8427494834:AAGN47L0zLR_tSNL_ObBse1FbJjUfUAqegQ/photos/file_323.jpg",
+            "after": "https://1000006.xyz/file/bot8427494834:AAGN47L0zLR_tSNL_ObBse1FbJjUfUAqegQ/photos/file_324.jpg",
+            "bName": "xhs_lp_74059E48-518E-43C2-BB15-188D64C967DD_out_img.jpeg",
+            "dName": "xhs_lp_086B3B11-D129-47FE-B5B4-99E0BD6A9F8E_out_img.jpeg",
+            "aName": "xhs_lp_3ED3371A-9296-4ECA-9822-AFB1E1DC4806_out_img.jpeg"
+          }
+        ]
+      },
+      {
+        "name": "位置2",
+        "records": [
+          {
+            "date": "2026-05-24",
+            "before": "https://1000006.xyz/file/bot8427494834:AAGN47L0zLR_tSNL_ObBse1FbJjUfUAqegQ/photos/file_325.jpg",
+            "doing": "https://1000006.xyz/file/bot8427494834:AAGN47L0zLR_tSNL_ObBse1FbJjUfUAqegQ/photos/file_326.jpg",
+            "after": "https://1000006.xyz/file/bot8427494834:AAGN47L0zLR_tSNL_ObBse1FbJjUfUAqegQ/photos/file_327.jpg",
+            "bName": "IMG_6664.jpeg",
+            "dName": "IMG_6649.jpeg",
+            "aName": "IMG_6669.jpeg"
+          }
+        ]
+      }
+    ]
+  }
+}
