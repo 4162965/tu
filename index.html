@@ -301,7 +301,7 @@ body{background:#f0f2f5;min-height:100vh;overflow-x:hidden;-webkit-text-size-adj
             <button class="btn-export btn-weekly" onclick="exportMy('weekly')">导出周报</button>
             <button class="btn-export btn-monthly" onclick="exportMy('monthly')">导出月报</button>
             <button class="btn-export btn-all" onclick="exportMy('all')">导出全部</button>
-            <button class="btn-export" onclick="openModal('syncConfigModal')" style="background:#e67e22">☁ 同步</button>
+            <button class="btn-export" id="btnMineSync" onclick="openModal('syncConfigModal')" style="background:#e67e22">☁ 同步</button>
         </div>
     </div>
 
@@ -545,9 +545,8 @@ const syncManager = {
                 console.error("同步配置解析失败:", e);
             }
         } else {
-            // 首次使用，写入预设配置
-            this.enabled = true;
-            this.token = "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";
+            this.enabled = false;
+            this.token = "";
             this.owner = "4162965";
             this.repo = "tu";
             this.branch = "main";
@@ -1115,6 +1114,11 @@ function showMainApp() {
         document.querySelector(".btn-tg-config").style.display = "none";
     }
     
+    // 云同步按钮仅管理员可见
+    document.getElementById("syncBadge").style.display = DEMO.isSuperAdmin ? "" : "none";
+    let mineSyncBtn = document.getElementById("btnMineSync");
+    if (mineSyncBtn) mineSyncBtn.style.display = DEMO.isSuperAdmin ? "" : "none";
+
     updateTgBadge();
     renderMine();
 }
@@ -1346,7 +1350,7 @@ function renderMemberMgmtList() {
     let html = '<table style="width:100%;border-collapse:collapse"><thead><tr>' +
         '<th style="text-align:left;padding:4px 6px;background:#f8f9fa;border:1px solid #e0e0e0;font-size:10px">用户名</th>' +
         '<th style="text-align:left;padding:4px 6px;background:#f8f9fa;border:1px solid #e0e0e0;font-size:10px">显示名</th>' +
-        '<th style="text-align:center;padding:4px 6px;background:#f8f9fa;border:1px solid #e0e0e0;font-size:10px;width:50px">操作</th>' +
+        '<th style="text-align:center;padding:4px 6px;background:#f8f9fa;border:1px solid #e0e0e0;font-size:10px;width:100px">操作</th>' +
         '</tr></thead><tbody>';
     
     users.forEach(u => {
@@ -1355,7 +1359,8 @@ function renderMemberMgmtList() {
             '<td style="padding:4px 6px;border:1px solid #e0e0e0">' + u + '</td>' +
             '<td style="padding:4px 6px;border:1px solid #e0e0e0;color:#555">' + name + '</td>' +
             '<td style="text-align:center;padding:4px 6px;border:1px solid #e0e0e0">' +
-                '<button onclick="editMember(\'' + u + '\')" style="padding:3px 6px;border:none;border-radius:3px;cursor:pointer;font-size:10px;background:#f0f5ff;color:#2980b9">编辑</button>' +
+                '<button onclick="editMember(\'' + u + '\')" style="padding:3px 6px;border:none;border-radius:3px;cursor:pointer;font-size:10px;background:#f0f5ff;color:#2980b9;margin-right:4px">编辑</button>' +
+                '<button onclick="deleteMemberAllData(\'' + u + '\')" style="padding:3px 6px;border:none;border-radius:3px;cursor:pointer;font-size:10px;background:#ffeaea;color:#e74c3c">删除数据</button>' +
             '</td></tr>';
     });
     
@@ -1446,6 +1451,56 @@ function deleteMember() {
     if (document.getElementById("page-admin").classList.contains("active")) {
         renderAdmin();
     }
+}
+
+// ==================== 管理员删除功能 ====================
+function deleteAdminRecord(user, area, loc, date) {
+    if (!confirm("确定删除「" + user + "」在 " + date + " 于「" + area + " - " + loc + "」的记录吗？")) return;
+    
+    // 从 adminData 中删除
+    DEMO.adminData = DEMO.adminData.filter(d =>
+        !(d.user === user && d.area === area && d.loc === loc && d.date === date)
+    );
+    
+    // 从 allUserData 中同步删除该用户的该条记录
+    if (DEMO.allUserData[user] && DEMO.allUserData[user].locations && DEMO.allUserData[user].locations[area]) {
+        let locs = DEMO.allUserData[user].locations[area];
+        locs.forEach(l => {
+            if (l.name === loc && l.records) {
+                l.records = l.records.filter(r => r.date !== date);
+            }
+        });
+    }
+    
+    saveData();
+    // 同步到云端
+    if (syncManager.enabled) {
+        setTimeout(() => syncManager.syncAllUsers().catch(e => console.error("删除记录同步失败:", e)), 200);
+    }
+    // 刷新管理后台视图
+    renderAdmin();
+}
+
+function deleteMemberAllData(user) {
+    if (!confirm("确定删除成员「" + user + "」的所有影像数据吗？\n该操作不可撤销！")) return;
+    
+    // 从 adminData 中删除该成员所有数据
+    DEMO.adminData = DEMO.adminData.filter(d => d.user !== user);
+    
+    // 清空 allUserData 中该成员的数据
+    if (DEMO.allUserData[user]) {
+        DEMO.allUserData[user].areas = [];
+        DEMO.allUserData[user].locations = {};
+    }
+    
+    saveData();
+    // 同步到云端
+    if (syncManager.enabled) {
+        setTimeout(() => syncManager.syncAllUsers().catch(e => console.error("删除成员数据同步失败:", e)), 200);
+    }
+    // 刷新管理后台
+    renderAdmin();
+    renderMemberMgmtList();
 }
 
 // ==================== 水印合成 ====================
@@ -1942,7 +1997,8 @@ function renderAdmin() {
                 '<td class="td-loc">'+d.loc+'</td>' +
                 makeThumb(d.before, true) +
                 makeThumb(d.doing, false) +
-                makeThumb(d.after, false) + '</tr>';
+                makeThumb(d.after, false) +
+                '<td style="text-align:center;width:50px"><button onclick="deleteAdminRecord('+JSON.stringify(d.user)+','+JSON.stringify(d.area)+','+JSON.stringify(d.loc)+','+JSON.stringify(d.date)+')" style="padding:2px 6px;background:#e74c3c;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:10px">删除</button></td></tr>';
         });
 
         let mobileCards = "";
@@ -1960,6 +2016,9 @@ function renderAdmin() {
                         '<div class="admin-mb-col"><span class="admin-mb-label">施工前</span>'+ (d.before ? '<img src="'+d.before+'" onclick="window.open(\''+d.before+'\')">' : '<span class="admin-mb-no">—</span>') +'</div>' +
                         '<div class="admin-mb-col"><span class="admin-mb-label">施工中</span>'+ (d.doing ? '<img src="'+d.doing+'" onclick="window.open(\''+d.doing+'\')">' : '<span class="admin-mb-no">—</span>') +'</div>' +
                         '<div class="admin-mb-col"><span class="admin-mb-label">施工后</span>'+ (d.after ? '<img src="'+d.after+'" onclick="window.open(\''+d.after+'\')">' : '<span class="admin-mb-no">—</span>') +'</div>' +
+                    '</div>' +
+                    '<div style="text-align:right;margin-top:6px">' +
+                        '<button onclick="deleteAdminRecord('+JSON.stringify(d.user)+','+JSON.stringify(d.area)+','+JSON.stringify(d.loc)+','+JSON.stringify(d.date)+')" style="padding:2px 8px;background:#e74c3c;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px">删除此条</button>' +
                     '</div></div>';
         });
 
@@ -1976,7 +2035,7 @@ function renderAdmin() {
             '</div>' +
             '<table class="admin-table-desktop"><thead><tr>' +
                 '<th style="width:70px">用户</th><th style="width:90px">区域</th><th style="width:100px">位置</th>' +
-                '<th style="width:85px">施工前</th><th style="width:85px">施工中</th><th style="width:85px">施工后</th>' +
+                '<th style="width:85px">施工前</th><th style="width:85px">施工中</th><th style="width:85px">施工后</th><th style="width:50px">操作</th>' +
             '</tr></thead><tbody>'+desktopRows+'</tbody></table>' +
             '<div class="admin-mobile-cards">'+mobileCards+'</div>';
         container.appendChild(card);
@@ -2212,8 +2271,25 @@ function downloadBlob(buf, filename) {
     URL.revokeObjectURL(a.href);
 }
 
+// 登录页回车键触发登录
+function initLoginEnterKey() {
+    let userInput = document.getElementById("loginPageUser");
+    let pwdInput = document.getElementById("loginPagePwd");
+    if (userInput && pwdInput) {
+        let handleEnter = function(e) {
+            if (e.key === "Enter" || e.keyCode === 13) {
+                e.preventDefault();
+                document.querySelector("#loginCard .btn-login-submit").click();
+            }
+        };
+        userInput.addEventListener("keydown", handleEnter);
+        pwdInput.addEventListener("keydown", handleEnter);
+    }
+}
+
 window.onload = function() {
     document.getElementById("viewDate").value = todayStr();
+    initLoginEnterKey();
     loadData();
     syncManager.loadConfig();
     // 初始显示登录页面
