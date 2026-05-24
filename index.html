@@ -2,243 +2,231 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-<title>项目施工影像归档系统 - 预览 v16</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>项目施工影像归档系统 - 预览 v19_fixed</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft YaHei","PingFang SC","苹方","微软雅黑",sans-serif}
-body{background:#f0f2f5;min-height:100vh;overflow-x:hidden}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:"Microsoft YaHei","PingFang SC","苹方","微软雅黑",sans-serif}
+body{background:#f0f2f5;min-height:100vh;overflow-x:hidden;-webkit-text-size-adjust:100%;-webkit-font-smoothing:antialiased}
 
-.toolbar{display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:48px;background:#fff;border-bottom:1px solid #e0e0e0;box-shadow:0 1px 4px rgba(0,0,0,0.06);position:sticky;top:0;z-index:100}
-.toolbar-left{display:flex;align-items:center;gap:10px}
-.toolbar-title{font-size:15px;font-weight:700;color:#1a1a1a;white-space:nowrap}
+.toolbar{display:flex;align-items:center;justify-content:space-between;padding:0 12px;height:48px;background:#fff;border-bottom:1px solid #e0e0e0;box-shadow:0 1px 4px rgba(0,0,0,0.06);position:sticky;top:0;z-index:100}
+.toolbar-left{display:flex;align-items:center;gap:8px;overflow:hidden}
+.toolbar-title{font-size:14px;font-weight:700;color:#1a1a1a;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;max-width:120px}
 .toolbar-nav{display:flex;gap:2px}
-.toolbar-nav button{padding:6px 14px;border:none;border-radius:6px;cursor:pointer;font-size:12px;background:transparent;color:#555;transition:all .2s;white-space:nowrap}
+.toolbar-nav button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer;font-size:11px;background:transparent;color:#555;transition:all .2s;white-space:nowrap}
 .toolbar-nav button:hover{background:#f0f5ff;color:#2980b9}
 .toolbar-nav button.active{background:#2980b9;color:#fff}
-.toolbar-right{display:flex;align-items:center;gap:8px}
-.toolbar-user{font-size:12px;color:#666;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.toolbar-right{display:flex;align-items:center;gap:6px}
+.toolbar-user{font-size:11px;color:#666;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .toolbar-user span{color:#2980b9;font-weight:600}
-.btn-sm{padding:5px 12px;border:none;border-radius:5px;cursor:pointer;font-size:11px;white-space:nowrap}
+.btn-sm{padding:4px 8px;border:none;border-radius:4px;cursor:pointer;font-size:10px;white-space:nowrap}
 .btn-login{background:#2980b9;color:#fff}.btn-login:hover{background:#2471a3}
 .btn-register{background:#27ae60;color:#fff}.btn-register:hover{background:#219a52}
 .btn-logout{background:#e74c3c;color:#fff}.btn-logout:hover{background:#c0392b}
 
-.main-content{padding:12px;max-width:1200px;margin:0 auto}
-.page{display:none}
-.page.active{display:block}
+/* 登录页面 */
+.login-page{display:none;position:fixed;top:48px;left:0;right:0;bottom:0;background:linear-gradient(135deg,#f0f2f5 0%,#e8edf2 100%);z-index:50;overflow-y:auto}
+.login-page.active{display:block}
+.login-page .login-container{display:flex;align-items:center;justify-content:center;min-height:100%;padding:20px 16px}
+.login-card{background:#fff;border-radius:12px;padding:28px 24px;width:100%;max-width:340px;box-shadow:0 8px 32px rgba(0,0,0,0.12);border:1px solid #e0e0e0;margin:0 auto}
+.login-sysname{text-align:center;font-size:18px;font-weight:700;color:#1a1a1a;margin-bottom:6px;letter-spacing:0.5px}
+.login-subtitle{text-align:center;font-size:12px;color:#888;margin-bottom:24px}
+.login-card .form-group{margin-bottom:12px}
+.login-card .form-group label{display:block;font-size:11px;color:#555;margin-bottom:4px;font-weight:600}
+.login-card .form-input{width:100%;padding:10px 12px;border:1px solid #d0d0d0;border-radius:6px;font-size:13px;outline:none;transition:border-color .2s;background:#f8f9fa;appearance:none;-webkit-appearance:none}
+.login-card .form-input:focus{border-color:#2980b9;background:#fff}
+.login-card .form-input::placeholder{color:#bbb}
+.login-card .btn-login-submit{width:100%;padding:10px;background:#2980b9;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;margin-top:4px}
+.login-card .btn-login-submit:hover{background:#2471a3}
+.login-card .btn-register-submit{width:100%;padding:10px;background:#27ae60;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;margin-top:4px}
+.login-card .btn-register-submit:hover{background:#219a52}
+.login-switch{text-align:center;margin-top:16px;font-size:11px;color:#888}
+.login-switch a{color:#2980b9;cursor:pointer;text-decoration:none;font-weight:600}
+.login-switch a:hover{text-decoration:underline}
+.login-msg{text-align:center;font-size:10px;color:#e74c3c;margin-top:8px;min-height:16px}
 
-.my-info-bar{display:flex;align-items:center;gap:12px;padding:10px 14px;background:#fff;border-radius:10px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,0.05);border:1px solid #d0d0d0;flex-wrap:wrap}
-.my-info-bar .my-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#2980b9,#2471a3);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700}
-.my-info-bar .my-details{flex:1;min-width:200px}
-.my-info-bar .my-details .my-name{font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:2px}
-.my-info-bar .my-details .my-role{font-size:11px;color:#888;display:flex;align-items:center;gap:4px}
-.my-info-bar .my-details .my-role .role-badge{padding:2px 6px;border-radius:3px;font-size:10px;background:#e0f2ff;color:#2980b9}
-.my-info-bar .my-actions{display:flex;gap:6px}
-.btn-edit-name{padding:6px 12px;background:#fff;color:#2980b9;border:1px solid #d0e3f7;border-radius:5px;cursor:pointer;font-size:11px}
-.btn-edit-name:hover{background:#f0f7ff}
-.btn-change-pwd{padding:6px 12px;background:#fff;color:#27ae60;border:1px solid #d0f0d0;border-radius:5px;cursor:pointer;font-size:11px}
-.btn-change-pwd:hover{background:#f0faf4}
+.main-content{display:flex;flex-direction:column;align-items:center;min-height:calc(100vh - 48px);padding:12px;max-width:100%;margin:0 auto}
+.page{display:none;width:100%}
+.page.active{display:block;margin:auto 0}
+#page-admin.active{margin:0}
 
-/* TG 配置按钮 */
-.btn-tg-config{padding:6px 12px;background:#fff;color:#e67e22;border:1px solid #fde3c8;border-radius:5px;cursor:pointer;font-size:11px}
-.btn-tg-config:hover{background:#fef9f2}
+.my-info-bar{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#fff;border-radius:10px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.05);border:1px solid #d0d0d0;flex-wrap:wrap}
+.my-info-bar .my-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#2980b9,#2471a3);color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700}
+.my-info-bar .my-details{flex:1;min-width:0}
+.my-info-bar .my-name{font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:2px}
+.my-info-bar .my-role{display:flex;align-items:center;gap:6px;font-size:10px;color:#666}
+.role-badge{padding:2px 6px;border-radius:3px;background:#e8f4ff;color:#2980b9;font-weight:600}
+.tg-status{padding:2px 6px;border-radius:3px;font-size:9px;font-weight:600;display:none}
+.tg-status.ok{background:#e8f6ef;color:#27ae60}
+.tg-status.no{background:#ffeaea;color:#e74c3c}
+.my-info-bar .my-actions{display:flex;gap:4px;flex-wrap:wrap}
+.my-info-bar .my-actions button{padding:4px 8px;border:none;border-radius:3px;cursor:pointer;font-size:10px;background:#f0f5ff;color:#2980b9}
+.my-info-bar .my-actions button:hover{background:#e0ebff}
 
-.tip-bar{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#fff3f3;border:1px solid #ffd4d4;border-radius:8px;margin-bottom:12px;flex-wrap:wrap}
-.tip-bar .tip-icon{font-size:16px;flex-shrink:0}
-.tip-bar .tip-text{font-size:12px;color:#c0392b;font-weight:500;flex:1;min-width:160px}
-.tip-bar .date-picker{display:flex;align-items:center;gap:4px}
-.tip-bar .date-picker span{font-size:12px;font-weight:600;color:#c0392b;white-space:nowrap}
-.tip-bar .date-picker input{padding:5px 8px;border:1px solid #ddd;border-radius:5px;font-size:12px;width:128px;color:#333}
+.tip-bar{display:flex;align-items:center;gap:6px;padding:8px 10px;background:#fff;border-radius:8px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.05);border:1px solid #e0e0e0;font-size:11px;color:#666}
+.tip-icon{color:#f39c12}
+.tip-text{flex:1;font-size:11px}
+.date-picker{display:flex;align-items:center;gap:4px;white-space:nowrap}
+.date-picker input{padding:4px 8px;border:1px solid #d0d0d0;border-radius:4px;font-size:11px;outline:none;background:#f8f9fa;appearance:none;-webkit-appearance:none}
+.date-picker input:focus{border-color:#2980b9}
 
-.area-card{background:#fff;border-radius:10px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,0.06);overflow:hidden;border:1px solid #d0d0d0}
-.area-card-header{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#fafbfc;border-bottom:1px solid #d0d0d0;flex-wrap:wrap;gap:8px}
-.area-card-header h3{font-size:14px;color:#2c3e50;font-weight:600}
-.area-card-header h3 .area-count{font-size:11px;color:#999;font-weight:400;margin-left:6px}
-.area-actions{display:flex;gap:6px;flex-wrap:wrap}
-.btn-add-loc{padding:5px 12px;background:#27ae60;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:11px;white-space:nowrap}
-.btn-add-loc:hover{background:#219a52}
-.btn-del-area{padding:5px 12px;background:#e74c3c;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:11px;white-space:nowrap}
-.btn-del-area:hover{background:#c0392b}
+.area-card{background:#fff;border-radius:10px;padding:10px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.08);border:1px solid #e0e0e0}
+.area-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0}
+.area-title{font-size:13px;font-weight:700;color:#1a1a1a}
+.area-actions{display:flex;gap:4px}
+.area-actions button{padding:3px 8px;border:none;border-radius:3px;cursor:pointer;font-size:10px;background:#f0f5ff;color:#2980b9}
+.area-actions button:hover{background:#e0ebff}
+.area-actions .btn-del-area{background:#ffeaea;color:#e74c3c}
+.area-actions .btn-del-area:hover{background:#ffd6d6}
 
-.data-table-desktop{width:100%;border-collapse:collapse}
-.data-table-desktop thead th{background:#eef1f5;padding:9px 10px;text-align:center;font-size:12px;font-weight:700;color:#333;border:1px solid #b0b0b0;white-space:nowrap}
-.data-table-desktop tbody td{padding:8px 10px;text-align:center;font-size:12px;border:1px solid #b0b0b0;vertical-align:middle;color:#333}
-.data-table-desktop tbody td.td-area{font-weight:700;color:#1a1a1a;background:#f9fafb}
-.data-table-desktop tbody td.td-loc{font-weight:600;color:#333;border-right:2px solid #999}
-.data-table-desktop tbody tr:hover td{background:#f5f7fa}
-.data-table-desktop tbody tr:hover td.td-area{background:#eef1f5}
+.table-container{overflow-x:auto;margin-bottom:8px;display:none}
+.area-table{width:100%;border-collapse:collapse;font-size:11px;min-width:600px}
+.area-table th{padding:6px 4px;text-align:center;background:#f8f9fa;color:#555;font-weight:600;border:1px solid #e0e0e0;white-space:nowrap}
+.area-table td{padding:4px;text-align:center;border:1px solid #e0e0e0;vertical-align:top}
+.area-table .td-area{background:#f8f9fa;font-weight:600;color:#2980b9}
+.area-table .td-loc{background:#f8f9fa;font-weight:600;color:#555;min-width:70px}
+.area-table .upload-cell{display:flex;flex-direction:column;align-items:center;gap:3px;min-height:50px}
+.area-table .no-img{width:75px;height:50px;display:flex;align-items:center;justify-content:center;background:#f8f9fa;border:1px dashed #d0d0d0;border-radius:4px;color:#888;font-size:10px}
+.area-table .img-thumb{width:75px;height:50px;object-fit:cover;border-radius:4px;border:1px solid #e0e0e0;background:#f8f9fa}
+.area-table .upload-btn-inline{position:relative;cursor:pointer;font-size:9px;color:#2980b9;background:#f0f5ff;padding:2px 5px;border-radius:3px;white-space:nowrap}
+.area-table .upload-btn-inline input{position:absolute;opacity:0;width:100%;height:100%;top:0;left:0;cursor:pointer}
+.area-table .btn-del-row{padding:3px 6px;border:none;border-radius:3px;cursor:pointer;font-size:9px;background:#ffeaea;color:#e74c3c}
+.area-table .btn-del-row:hover{background:#ffd6d6}
 
-.upload-cell{display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 2px}
-.upload-cell .img-thumb{width:85px;height:58px;object-fit:cover;border-radius:4px;border:1px solid #ccc;background:#f9f9f9}
-.upload-cell .no-img{font-size:10px;color:#aaa;padding:10px 6px;border:1.5px dashed #bbb;border-radius:4px;width:100%;text-align:center;background:#fcfcfc}
-.upload-btn-inline{padding:3px 10px;border:1.5px dashed #bbb;border-radius:4px;cursor:pointer;font-size:10px;color:#888;background:#fff;margin-top:2px}
-.upload-btn-inline:hover{border-color:#2980b9;color:#2980b9;background:#f0f8ff}
-.file-input{display:none}
+.loc-cards{display:flex;flex-direction:column;gap:8px}
+.loc-card{background:#f8f9fa;border-radius:6px;padding:8px;border:1px solid #e0e0e0}
+.loc-card .loc-name{font-size:12px;font-weight:600;color:#2980b9;margin-bottom:6px}
+.loc-card .loc-imgs{display:flex;gap:6px;justify-content:space-between}
+.loc-card .loc-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+.loc-card .loc-label{font-size:9px;color:#888;font-weight:600}
+.loc-card .loc-img{width:100%;height:50px;object-fit:cover;border-radius:4px;border:1px solid #e0e0e0;background:#fff}
+.loc-card .loc-no-img{width:100%;height:50px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px dashed #d0d0d0;border-radius:4px;color:#888;font-size:9px}
+.loc-card .loc-upload-btn{position:relative;cursor:pointer;font-size:9px;color:#2980b9;background:#f0f5ff;padding:2px 5px;border-radius:3px;white-space:nowrap;width:100%;text-align:center}
+.loc-card .loc-upload-btn input{position:absolute;opacity:0;width:100%;height:100%;top:0;left:0;cursor:pointer}
+.loc-card .loc-del-btn{padding:3px 6px;border:none;border-radius:3px;cursor:pointer;font-size:9px;background:#ffeaea;color:#e74c3c;margin-top:4px;width:100%}
+.loc-card .loc-del-btn:hover{background:#ffd6d6}
+.add-loc-area{text-align:center;margin-top:6px}
+.add-loc-area button{padding:5px 10px;border:none;border-radius:4px;cursor:pointer;font-size:11px;background:#27ae60;color:#fff}
+.add-loc-area button:hover{background:#219a52}
 
-/* 上传进度 */
-.upload-progress{font-size:10px;color:#2980b9;margin-top:2px;display:none}
-.upload-progress.show{display:block}
+.no-area-hint{text-align:center;padding:30px 16px;color:#888;font-size:12px;background:#fff;border-radius:10px;border:1px dashed #d0d0d0}
+.btn-new-area,.btn-select-area{display:block;margin:0 auto;padding:10px 16px;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;background:#2980b9;color:#fff}
+.btn-new-area:hover,.btn-select-area:hover{background:#2471a3}
+.btn-select-area{background:#27ae60}
+.btn-select-area:hover{background:#219a52}
 
-.btn-del-row{padding:4px 10px;background:#fff;color:#e74c3c;border:1px solid #d0d0d0;border-radius:4px;cursor:pointer;font-size:10px;white-space:nowrap}
-.btn-del-row:hover{background:#e74c3c;color:#fff;border-color:#e74c3c}
+.bottom-actions{display:flex;flex-direction:column;gap:8px;margin-top:12px;width:100%}
+.btn-export{padding:8px 12px;border:none;border-radius:5px;cursor:pointer;font-size:11px;font-weight:600;color:#fff;white-space:nowrap;width:100%}
+.btn-daily{background:#2980b9}
+.btn-weekly{background:#27ae60}
+.btn-monthly{background:#f39c12}
+.btn-all{background:#e74c3c}
+.btn-export:hover{opacity:0.9}
 
-.add-loc-area{padding:10px 14px;text-align:center;border-top:1.5px dashed #ccc}
-.add-loc-area button{padding:6px 18px;background:none;color:#666;border:1.5px dashed #bbb;border-radius:5px;cursor:pointer;font-size:12px;transition:all .2s}
-.add-loc-area button:hover{border-color:#27ae60;color:#27ae60;background:#f0faf4}
+.upload-progress-bar{display:none;position:fixed;top:48px;left:0;right:0;height:4px;z-index:1000}
+.upload-progress-bar.show{display:block}
+.upload-progress-track{height:100%;background:#f0f0f0}
+.upload-progress-fill{height:100%;background:#2980b9;width:0;transition:width .3s}
+.upload-progress-fill.indeterminate{width:30%;animation:progressIndeterminate 1.5s infinite}
+.upload-progress-text{position:absolute;top:-20px;right:10px;font-size:10px;color:#2980b9}
+.upload-progress-bar.success .upload-progress-fill{background:#27ae60}
+.upload-progress-bar.error .upload-progress-fill{background:#e74c3c}
+@keyframes progressIndeterminate{0%{transform:translateX(-100%)}100%{transform:translateX(330%)}}
 
-.loc-cards{display:none;padding:10px 14px}
-.loc-card{background:#fff;border:1px solid #b0b0b0;border-radius:8px;padding:10px 12px;margin-bottom:8px}
-.loc-card .loc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #d0d0d0}
-.loc-card .loc-title{font-size:13px;font-weight:700;color:#1a1a1a}
-.loc-card .loc-del{font-size:11px;color:#e74c3c;border:1px solid #d0d0d0;padding:3px 10px;border-radius:4px;background:#fff;cursor:pointer}
-.loc-card .loc-del:hover{background:#e74c3c;color:#fff}
-.loc-card .img-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.loc-card .img-item{display:flex;flex-direction:column;align-items:center;gap:3px}
-.loc-card .img-item .img-label{font-size:10px;color:#777;font-weight:600}
-.loc-card .img-item img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:4px;border:1px solid #ccc;background:#f9f9f9}
-.loc-card .img-item .no-img-mobile{width:100%;aspect-ratio:4/3;background:#fcfcfc;border:1.5px dashed #bbb;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;color:#bbb}
-.upload-btn-mobile{padding:3px 8px;border:1.5px dashed #bbb;border-radius:4px;cursor:pointer;font-size:10px;color:#888;background:#fff;margin-top:3px;display:inline-block}
-.upload-btn-mobile:active{border-color:#2980b9;color:#2980b9;background:#f0f8ff}
+/* 管理后台 */
+.admin-tip{display:flex;flex-direction:column;gap:8px;padding:8px 10px;background:#fff;border-radius:8px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.05);border:1px solid #e0e0e0;font-size:11px;color:#666}
+.admin-filters{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.admin-filters select,.admin-filters input{padding:4px 6px;border:1px solid #d0d0d0;border-radius:4px;font-size:11px;outline:none;background:#f8f9fa;appearance:none;-webkit-appearance:none;flex:1;min-width:0}
+.admin-filters select:focus,.admin-filters input:focus{border-color:#2980b9}
+.admin-filters .sep{color:#888;font-size:10px}
+.admin-filters .btn-refresh{padding:4px 8px;border:none;border-radius:4px;cursor:pointer;font-size:11px;background:#2980b9;color:#fff}
+.admin-filters .btn-refresh:hover{background:#2471a3}
 
-.mobile-add-loc{padding:8px 14px;text-align:center;border-top:1.5px dashed #ccc}
-.mobile-add-loc button{padding:6px 18px;background:none;color:#666;border:1.5px dashed #bbb;border-radius:5px;cursor:pointer;font-size:12px}
+.date-group-card{background:#fff;border-radius:10px;padding:10px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,0.08);border:1px solid #e0e0e0}
+.date-group-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid #f0f0f0}
+.date-badge{font-size:12px;font-weight:700;color:#1a1a1a;background:#f0f5ff;padding:3px 6px;border-radius:4px}
+.date-weekday{font-size:11px;color:#888}
+.date-stats{font-size:10px;color:#666;margin-left:auto}
 
-.bottom-actions{display:flex;justify-content:center;gap:8px;margin-top:16px;padding:12px 0;flex-wrap:wrap}
-.btn-export{padding:8px 14px;border:none;border-radius:6px;cursor:pointer;font-size:12px;color:#fff;font-weight:500;white-space:nowrap}
-.btn-daily{background:#3498db}.btn-daily:hover{background:#2980b9}
-.btn-weekly{background:#2ecc71}.btn-weekly:hover{background:#27ae60}
-.btn-monthly{background:#9b59b6}.btn-monthly:hover{background:#8e44ad}
-.btn-all{background:#e67e22}.btn-all:hover{background:#d35400}
+.admin-table-desktop{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px;display:none}
+.admin-table-desktop th{padding:6px 4px;text-align:center;background:#f8f9fa;color:#555;font-weight:600;border:1px solid #e0e0e0}
+.admin-table-desktop td{padding:4px;text-align:center;border:1px solid #e0e0e0;vertical-align:middle}
+.admin-table-desktop .td-user,.admin-table-desktop .td-area{background:#f8f9fa;font-weight:600}
+.admin-table-desktop .td-loc{background:#f8f9fa}
+.admin-table-desktop .td-before{border-left:2px solid #2980b9}
+.admin-img-thumb{width:75px;height:50px;object-fit:cover;border-radius:4px;border:1px solid #e0e0e0;background:#f8f9fa;cursor:pointer}
+.admin-no-img{color:#888;font-size:10px}
 
-/* 上传进度条 */
-.upload-progress-bar{display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#fff;padding:10px 20px;box-shadow:0 2px 12px rgba(0,0,0,0.12);align-items:center;gap:12px}
-.upload-progress-bar.show{display:flex}
-.upload-progress-track{flex:1;height:6px;background:#e8e8e8;border-radius:3px;overflow:hidden}
-.upload-progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#3498db,#2ecc71);border-radius:3px;transition:width 0.3s ease}
-.upload-progress-fill.indeterminate{width:40%;animation:progressSlide 1.5s ease-in-out infinite}
-@keyframes progressSlide{0%{margin-left:-40%}50%{margin-left:60%}100%{margin-left:100%}}
-.upload-progress-text{font-size:13px;color:#555;white-space:nowrap;min-width:80px;text-align:right}
-.upload-progress-bar.success .upload-progress-fill{width:100%;background:#2ecc71}
-.upload-progress-bar.success .upload-progress-text{color:#27ae60}
-.upload-progress-bar.error .upload-progress-fill{width:100%;background:#e74c3c}
-.upload-progress-bar.error .upload-progress-text{color:#c0392b}
-.btn-new-area{padding:9px 24px;background:#e67e22;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500}
-.btn-new-area:hover{background:#d35400}
-.btn-select-area{padding:9px 24px;background:#379;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500}
-.btn-select-area:hover{background:#2a6a8a}
-.no-area-hint{text-align:center;padding:30px 16px;background:#fff;border-radius:10px;color:#888;font-size:13px;border:1px dashed #ddd}
+.admin-mobile-cards{display:block}
+.admin-mb{background:#f8f9fa;border-radius:6px;padding:8px;margin-bottom:6px;border:1px solid #e0e0e0}
+.admin-mb-user{font-size:12px;font-weight:600;color:#2980b9;margin-bottom:2px}
+.admin-mb-meta{font-size:10px;color:#888;margin-bottom:6px}
+.admin-mb-imgs{display:flex;gap:6px;justify-content:space-between}
+.admin-mb-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px}
+.admin-mb-label{font-size:9px;color:#888;font-weight:600}
+.admin-mb-col img{width:100%;height:50px;object-fit:cover;border-radius:4px;border:1px solid #e0e0e0;background:#fff;cursor:pointer}
+.admin-mb-no{width:100%;height:50px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px dashed #d0d0d0;border-radius:4px;color:#888;font-size:9px}
+.empty-hint{text-align:center;padding:30px 16px;color:#888;font-size:12px;background:#fff;border-radius:10px;border:1px dashed #d0d0d0}
 
-.admin-tip{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f0f7ff;border:1px solid #d0e3f7;border-radius:8px;margin-bottom:12px;flex-wrap:wrap}
-.admin-tip .tip-text{font-size:12px;color:#2471a3;font-weight:500}
-.admin-filters{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.admin-filters select{padding:5px 10px;border:1px solid #ddd;border-radius:5px;font-size:11px;min-width:100px;background:#fff}
-.admin-filters input[type=date]{padding:5px 8px;border:1px solid #ddd;border-radius:5px;font-size:11px;width:120px;background:#fff}
-.admin-filters .sep{color:#999;font-size:11px}
-.btn-refresh{padding:5px 12px;background:#2980b9;color:#fff;border:none;border-radius:5px;cursor:pointer;font-size:11px}
-
-.date-group-card{background:#fff;border-radius:10px;margin-bottom:16px;box-shadow:0 1px 6px rgba(0,0,0,0.06);overflow:hidden;border:1px solid #b0b0b0}
-.date-group-header{display:flex;align-items:center;padding:12px 16px;background:linear-gradient(135deg,#2980b9,#2471a3);color:#fff;gap:10px}
-.date-group-header .date-badge{font-size:18px;font-weight:700}
-.date-group-header .date-weekday{font-size:12px;opacity:0.85}
-.date-group-header .date-stats{margin-left:auto;font-size:12px;opacity:0.9}
-
-.admin-table-desktop{width:100%;border-collapse:collapse}
-.admin-table-desktop thead th{background:#eef1f5;padding:9px 10px;text-align:center;font-size:12px;font-weight:700;color:#333;border:1px solid #b0b0b0;white-space:nowrap}
-.admin-table-desktop tbody td{padding:7px 10px;text-align:center;font-size:12px;border:1px solid #b0b0b0;vertical-align:middle;color:#333}
-.admin-table-desktop td.td-user{font-weight:700;color:#1a1a1a;background:#f9fafb}
-.admin-table-desktop td.td-area{font-weight:600;color:#2980b9}
-.admin-table-desktop td.td-loc{font-weight:600;color:#333;border-right:2px solid #999}
-.admin-img-thumb{width:60px;height:40px;object-fit:cover;border-radius:3px;border:1px solid #ccc;cursor:pointer}
-.admin-img-thumb:hover{opacity:0.8}
-.admin-no-img{display:inline-block;width:60px;height:40px;line-height:40px;font-size:9px;color:#bbb;background:#fcfcfc;border-radius:3px;border:1.5px dashed #ccc}
-
-.admin-mobile-cards{display:none;padding:8px 14px}
-.admin-mb{background:#fff;border:1px solid #b0b0b0;border-radius:8px;padding:10px;margin-bottom:8px}
-.admin-mb .admin-mb-user{font-size:13px;font-weight:700;color:#1a1a1a;margin-bottom:4px}
-.admin-mb .admin-mb-meta{font-size:11px;color:#888;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid #d0d0d0}
-.admin-mb .admin-mb-imgs{display:flex;gap:8px}
-.admin-mb .admin-mb-imgs .admin-mb-col{display:flex;flex-direction:column;align-items:center;gap:2px;flex:1}
-.admin-mb .admin-mb-imgs .admin-mb-col .admin-mb-label{font-size:9px;color:#999;font-weight:600}
-.admin-mb .admin-mb-imgs img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:4px;border:1px solid #ccc;cursor:pointer}
-.admin-mb .admin-mb-imgs .admin-mb-no{width:100%;aspect-ratio:4/3;background:#fcfcfc;border:1.5px dashed #ccc;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8px;color:#ccc}
-
-.empty-hint{text-align:center;padding:36px;color:#999;font-size:13px}
-
-.modal-mask{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;z-index:9999;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+/* 弹窗 */
+.modal-mask{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:2000;align-items:center;justify-content:center;padding:16px}
 .modal-mask.show{display:flex}
-.modal-box{background:#fff;padding:24px 20px;border-radius:14px;width:92%;max-width:380px;box-shadow:0 12px 40px rgba(0,0,0,0.18);margin:0 16px}
-.modal-box h4{font-size:17px;margin-bottom:16px;color:#1a1a1a;text-align:center;font-weight:700}
-.modal-box .form-group{margin-bottom:12px}
-.modal-box .form-group label{display:block;font-size:12px;color:#888;margin-bottom:4px;font-weight:500}
-.modal-box .form-input{width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;transition:border .2s;background:#fafafa;-webkit-appearance:none}
-.modal-box .form-input:focus{outline:none;border-color:#2980b9;background:#fff;box-shadow:0 0 0 3px rgba(41,128,185,0.08)}
-.modal-box .form-select{width:100%;padding:10px 12px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;background:#fafafa;appearance:none;-webkit-appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M6 8L1 3h10z' fill='%23999'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
-.modal-box .form-select:focus{outline:none;border-color:#2980b9;background:#fff}
-.modal-box .form-hint{font-size:11px;color:#aaa;margin-bottom:10px;text-align:center}
-.modal-actions{display:flex;gap:10px;margin-top:16px}
-.modal-actions button{flex:1;padding:10px 0;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:500;transition:all .2s;-webkit-tap-highlight-color:transparent}
-.btn-cancel{background:#f0f0f0;color:#666}.btn-cancel:hover{background:#e0e0e0}
-.btn-confirm{background:#2980b9;color:#fff}.btn-confirm:hover{background:#2471a3;box-shadow:0 2px 8px rgba(41,128,185,0.3)}
-.btn-danger{background:#e74c3c;color:#fff}.btn-danger:hover{background:#c0392b}
+.modal-box{background:#fff;border-radius:10px;padding:16px;width:100%;max-width:320px;box-shadow:0 8px 24px rgba(0,0,0,0.12);border:1px solid #e0e0e0;max-height:90vh;overflow-y:auto}
+.modal-box h4{font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:10px}
+.form-hint{font-size:11px;color:#888;margin-bottom:10px}
+.form-group{margin-bottom:10px}
+.form-group label{display:block;font-size:11px;color:#555;margin-bottom:4px;font-weight:600}
+.form-input,.form-select{width:100%;padding:8px 10px;border:1px solid #d0d0d0;border-radius:6px;font-size:12px;outline:none;transition:border-color .2s;background:#f8f9fa;appearance:none;-webkit-appearance:none}
+.form-input:focus,.form-select:focus{border-color:#2980b9;background:#fff}
+.form-input::placeholder{color:#bbb}
+.modal-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:12px}
+.btn-cancel{padding:8px 12px;border:1px solid #d0d0d0;border-radius:6px;cursor:pointer;font-size:12px;background:#fff;color:#555}
+.btn-cancel:hover{background:#f8f9fa}
+.btn-confirm{padding:8px 12px;border:none;border-radius:6px;cursor:pointer;font-size:12px;background:#2980b9;color:#fff}
+.btn-confirm:hover{background:#2471a3}
+.btn-danger{padding:8px 12px;border:none;border-radius:6px;cursor:pointer;font-size:12px;background:#e74c3c;color:#fff}
+.btn-danger:hover{background:#c0392b}
 
-/* TG 状态标签 */
-.tg-status{padding:2px 6px;border-radius:3px;font-size:9px;font-weight:600;vertical-align:middle}
-.tg-status.ok{background:#e8f5e9;color:#27ae60}
-.tg-status.no{background:#fff3e0;color:#e67e22}
-
-@media (max-width:768px) {
-    .toolbar{padding:0 8px;height:44px;gap:4px}
-    .toolbar-title{font-size:14px}
-    .toolbar-nav button{padding:5px 10px;font-size:11px}
-    .toolbar-user{max-width:80px;font-size:11px}
-    .btn-sm{padding:4px 10px;font-size:10px}
-    .my-info-bar{padding:8px 10px;gap:8px}
-    .my-info-bar .my-avatar{width:32px;height:32px;font-size:14px}
-    .my-info-bar .my-details{min-width:0}
-    .my-info-bar .my-actions{gap:4px}
-    .btn-edit-name,.btn-change-pwd,.btn-tg-config{padding:5px 10px;font-size:10px}
-    .data-table-desktop{display:none}
-    .loc-cards{display:block}
-    .add-loc-area{display:none}
-    .mobile-add-loc{display:block}
-    .area-card-header{padding:8px 10px}
-    .area-card-header h3{font-size:13px}
-    .bottom-actions{gap:6px}
-    .btn-export{padding:8px 12px;font-size:11px;flex:1;min-width:0;text-align:center}
-    .btn-new-area,.btn-select-area{width:100%;max-width:280px;padding:11px 0;font-size:14px}
-    .admin-table-desktop{display:none}
-    .admin-mobile-cards{display:block}
-    .admin-filters{gap:4px}
-    .admin-filters select,.admin-filters input[type=date]{font-size:10px;padding:4px 6px;min-width:0}
-    .admin-filters input[type=date]{width:110px}
-    .modal-box{padding:20px 14px;width:94%}
-    .date-group-header{padding:10px 12px}
-    .date-group-header .date-badge{font-size:16px}
+/* 响应式 */
+@media (min-width:768px) {
+    .toolbar{padding:0 16px}
+    .toolbar-title{font-size:15px;max-width:200px}
+    .toolbar-nav button{padding:6px 14px;font-size:12px}
+    .btn-sm{padding:5px 12px;font-size:11px}
+    .toolbar-user{font-size:12px;max-width:120px}
+    .login-card{padding:32px 28px;max-width:360px}
+    .login-sysname{font-size:18px}
+    .login-subtitle{font-size:12px}
+    .main-content{padding:12px;max-width:1200px}
+    .table-container{display:block}
+    .loc-cards{display:none}
+    .admin-table-desktop{display:table}
+    .admin-mobile-cards{display:none}
+    .bottom-actions{flex-direction:row;gap:10px}
+    .btn-export{width:auto}
 }
 @media (max-width:400px) {
-    .toolbar-title{font-size:13px}
+    .toolbar-title{font-size:13px;max-width:100px}
     .toolbar-nav button{padding:4px 8px;font-size:10px}
     .toolbar-user{display:none}
     .btn-sm{padding:4px 8px;font-size:10px}
-    .tip-bar .tip-text{font-size:11px}
-    .loc-card .img-grid{gap:4px}
+    .admin-tip{flex-direction:column;align-items:stretch}
+    .admin-filters{width:100%}
 }
 </style>
 </head>
 <body>
-
 <div class="toolbar">
     <div class="toolbar-left">
-        <div class="toolbar-title">施工影像归档</div>
+        <div class="toolbar-title">项目施工影像归档系统</div>
         <div class="toolbar-nav">
             <button class="active" id="navMine" onclick="switchPage('mine')">我的项目</button>
-            <button id="navAdmin" onclick="switchPage('admin')" style="display:none">管理后台</button>
+            <button id="navAdmin" style="display:none" onclick="switchPage('admin')">管理后台</button>
         </div>
     </div>
     <div class="toolbar-right">
         <div class="toolbar-user">当前用户：<span id="toolbarUser">未登录</span></div>
-        <button class="btn-sm btn-login" id="btnLogin" onclick="openModal('loginModal')">登录</button>
-        <button class="btn-sm btn-register" id="btnRegister" onclick="openModal('registerModal')">注册</button>
+        <button class="btn-sm btn-login" id="btnLogin" onclick="showLoginPage()">登录</button>
+        <button class="btn-sm btn-register" id="btnRegister" onclick="showLoginPage();setTimeout(function(){switchToRegister();},100)">注册</button>
         <button class="btn-sm btn-logout" id="btnLogout" style="display:none" onclick="doLogout()">退出</button>
     </div>
 </div>
@@ -251,7 +239,32 @@ body{background:#f0f2f5;min-height:100vh;overflow-x:hidden}
 </div>
 
 <div class="main-content">
-    <div class="page active" id="page-mine">
+    <!-- 登录页面 -->
+    <div class="page login-page active" id="page-login">
+        <div class="login-container">
+            <div class="login-card" id="loginCard">
+                <div class="login-sysname">项目施工影像归档系统</div>
+                <div class="login-subtitle">登录以查看和管理施工影像</div>
+                <div class="form-group"><label>用户名</label><input type="text" class="form-input" id="loginPageUser" placeholder="请输入用户名"></div>
+                <div class="form-group"><label>密码</label><input type="password" class="form-input" id="loginPagePwd" placeholder="请输入密码"></div>
+                <button class="btn-login-submit" onclick="doLoginFromPage()">登 录</button>
+                <div class="login-msg" id="loginPageMsg"></div>
+                <div class="login-switch">没有账号？<a onclick="switchToRegister()">注册</a></div>
+            </div>
+            <div class="login-card" id="registerCard" style="display:none">
+                <div class="login-sysname">账户注册</div>
+                <div class="login-subtitle">注册新账号以使用影像归档系统</div>
+                <div class="form-group"><label>用户名</label><input type="text" class="form-input" id="regPageUser" placeholder="请输入用户名"></div>
+                <div class="form-group"><label>密码</label><input type="password" class="form-input" id="regPagePwd" placeholder="请输入密码（至少4位）"></div>
+                <div class="form-group"><label>确认密码</label><input type="password" class="form-input" id="regPagePwd2" placeholder="请再次输入密码"></div>
+                <button class="btn-register-submit" onclick="doRegisterFromPage()">注 册</button>
+                <div class="login-msg" id="registerPageMsg"></div>
+                <div class="login-switch">已有账号？<a onclick="switchToLogin()">登录</a></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page" id="page-mine">
         <div class="my-info-bar" id="myInfoBar" style="display:none">
             <div class="my-avatar" id="myAvatar">张</div>
             <div class="my-details">
@@ -316,7 +329,7 @@ body{background:#f0f2f5;min-height:100vh;overflow-x:hidden}
         <div class="form-group"><label>密码</label><input type="password" class="form-input" id="loginPwd" placeholder="请输入密码"></div>
         <div class="modal-actions">
             <button class="btn-cancel" onclick="closeModal('loginModal')">取消</button>
-            <button class="btn-confirm" onclick="doLogin()">登录</button>
+            <button class="btn-confirm" onclick="closeModal('loginModal');showLoginPage()">登录</button>
         </div>
     </div>
 </div>
@@ -360,9 +373,9 @@ body{background:#f0f2f5;min-height:100vh;overflow-x:hidden}
 <!-- TG 设置 -->
 <div class="modal-mask" id="tgConfigModal">
     <div class="modal-box">
-        <h4>Telegram 上传设置</h4>
-        <div class="form-hint" style="color:#e67e22;text-align:left">图片通过 Bot API 发送到指定群组/频道，各成员共享同一 TG 配置</div>
-        <div class="form-group"><label>Bot Token</label><input type="text" class="form-input" id="tgToken" placeholder="123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"></div>
+        <h4>Telegram 配置</h4>
+        <div class="form-hint">用于自动上传图片到指定群组/频道</div>
+        <div class="form-group"><label>Bot Token</label><input type="text" class="form-input" id="tgToken" placeholder="8427494834:AAGN47L0zLR_tSNL_ObBse1FbJjUfUAqegQ"></div>
         <div class="form-group"><label>Chat ID（群组/频道/个人）</label><input type="text" class="form-input" id="tgChatId" placeholder="-1001234567890"></div>
         <div class="form-group"><label>反代地址（可选，国内网络需填写）</label><input type="text" class="form-input" id="tgProxy" placeholder="https://your-proxy.com"></div>
         <div class="modal-actions">
@@ -412,50 +425,115 @@ const DEMO = {
     isSuperAdmin: false,
     userDisplayName: "张工",
     userJoinDate: "2026-05-24",
-    // 注册用户表（用户名 → 密码）
+    // 注册用户表（用户名 → {pwd, name}）
     registeredUsers: {
-        "张三": "123456",
-        "李四": "123456",
-        "张工": "123456"
+        "张三": { pwd: "123456", name: "张三" },
+        "李四": { pwd: "123456", name: "李四" },
+        "张工": { pwd: "123456", name: "张工" }
     },
-    // TG 配置
+    // 多用户数据（每个用户独立的 areas / locations）
+    allUserData: {
+        "admin": {
+            areas: ["六祖大道", "核心区"],
+            locations: {
+                "六祖大道": [
+                    { name: "位置1", records: [] },
+                    { name: "位置2", records: [] },
+                    { name: "位置3", records: [] }
+                ],
+                "核心区": [
+                    { name: "位置1", records: [] },
+                    { name: "位置2", records: [] }
+                ]
+            }
+        }
+    },
+    // 当前会话数据（登录后从 allUserData 加载）
+    areas: [],
+    locations: {},
+    // TG 配置（共享）
     tgToken: "8427494834:AAGN47L0zLR_tSNL_ObBse1FbJjUfUAqegQ",
     tgChatId: "-1003006900961",
     tgProxy: "https://1000006.xyz/",
-    areas: ["六祖大道", "核心区"],
-    locations: {
-        "六祖大道": [
-            { name: "位置1", records: [] },
-            { name: "位置2", records: [] },
-            { name: "位置3", records: [] }
-        ],
-        "核心区": [
-            { name: "位置1", records: [] },
-            { name: "位置2", records: [] }
-        ]
-    },
     adminData: [
     ]
 };
 
 // 持久化存储
-function saveData() { localStorage.setItem("gc_cm_data", JSON.stringify({ registeredUsers: DEMO.registeredUsers, tgToken: DEMO.tgToken, tgChatId: DEMO.tgChatId, tgProxy: DEMO.tgProxy, adminData: DEMO.adminData, areas: DEMO.areas, locations: DEMO.locations })); }
+function saveData() { 
+    localStorage.setItem("gc_cm_data", JSON.stringify({ 
+        registeredUsers: DEMO.registeredUsers, 
+        allUserData: DEMO.allUserData,
+        tgToken: DEMO.tgToken, 
+        tgChatId: DEMO.tgChatId, 
+        tgProxy: DEMO.tgProxy, 
+        adminData: DEMO.adminData 
+    })); 
+}
 function loadData() {
     let raw = localStorage.getItem("gc_cm_data");
     if (raw) {
         try {
             let d = JSON.parse(raw);
             if (d.registeredUsers) DEMO.registeredUsers = d.registeredUsers;
+            if (d.allUserData) DEMO.allUserData = d.allUserData;
             if (d.tgToken) DEMO.tgToken = d.tgToken;
             if (d.tgChatId) DEMO.tgChatId = d.tgChatId;
             if (d.tgProxy) DEMO.tgProxy = d.tgProxy;
             if (d.adminData) DEMO.adminData = d.adminData;
-            if (d.areas) DEMO.areas = d.areas;
-            if (d.locations) DEMO.locations = d.locations;
         } catch(e) {}
     }
     updateTgBadge();
 }
+
+// 加载当前用户数据
+function loadCurrentUserData() {
+    if (!DEMO.currentUser) {
+        DEMO.areas = [];
+        DEMO.locations = {};
+        return;
+    }
+    
+    if (DEMO.isSuperAdmin) {
+        // 超级管理员使用 admin 数据
+        if (DEMO.allUserData["admin"]) {
+            DEMO.areas = DEMO.allUserData["admin"].areas || [];
+            DEMO.locations = DEMO.allUserData["admin"].locations || {};
+        } else {
+            DEMO.areas = [];
+            DEMO.locations = {};
+        }
+    } else {
+        // 普通成员使用自己的数据
+        if (DEMO.allUserData[DEMO.currentUser]) {
+            DEMO.areas = DEMO.allUserData[DEMO.currentUser].areas || [];
+            DEMO.locations = DEMO.allUserData[DEMO.currentUser].locations || {};
+        } else {
+            // 新用户：初始化空数据
+            DEMO.areas = [];
+            DEMO.locations = {};
+        }
+    }
+}
+
+// 保存当前用户数据
+function saveCurrentUserData() {
+    if (!DEMO.currentUser) return;
+    
+    if (DEMO.isSuperAdmin) {
+        // 超级管理员保存到 admin
+        if (!DEMO.allUserData["admin"]) DEMO.allUserData["admin"] = {};
+        DEMO.allUserData["admin"].areas = DEMO.areas;
+        DEMO.allUserData["admin"].locations = DEMO.locations;
+    } else {
+        // 普通成员保存到自己的数据
+        if (!DEMO.allUserData[DEMO.currentUser]) DEMO.allUserData[DEMO.currentUser] = {};
+        DEMO.allUserData[DEMO.currentUser].areas = DEMO.areas;
+        DEMO.allUserData[DEMO.currentUser].locations = DEMO.locations;
+    }
+    saveData();
+}
+
 function updateTgBadge() {
     let badge = document.getElementById("tgStatusBadge");
     if (DEMO.tgToken && DEMO.tgChatId) {
@@ -477,7 +555,9 @@ function openModal(id) {
     if (id === "selectAreaModal") {
         let sel = document.getElementById("selectAreaDropdown");
         sel.innerHTML = "";
-        DEMO.areas.forEach(a => { let opt = document.createElement("option"); opt.value = a; opt.innerText = a; sel.appendChild(opt); });
+        // 成员只能选择管理员已创建的区域
+        let availableAreas = (DEMO.allUserData["admin"] && DEMO.allUserData["admin"].areas) ? DEMO.allUserData["admin"].areas : [];
+        availableAreas.forEach(a => { let opt = document.createElement("option"); opt.value = a; opt.innerText = a; sel.appendChild(opt); });
     }
     if (id === "tgConfigModal") {
         document.getElementById("tgToken").value = DEMO.tgToken;
@@ -487,51 +567,52 @@ function openModal(id) {
     document.getElementById(id).classList.add("show");
 }
 function closeModal(id) { document.getElementById(id).classList.remove("show"); }
-function switchPage(page) {
+
+// ==================== 页面切换 ====================
+function showLoginPage() {
+    // 隐藏所有页面
     document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
     document.querySelectorAll(".toolbar-nav button").forEach(b => b.classList.remove("active"));
-    if (page === "mine") {
-        document.getElementById("page-mine").classList.add("active");
-        document.getElementById("navMine").classList.add("active");
-        renderMine();
-    } else {
-        document.getElementById("page-admin").classList.add("active");
-        document.getElementById("navAdmin").classList.add("active");
-        renderAdmin();
-    }
+    
+    // 显示登录页面
+    document.getElementById("page-login").classList.add("active");
+    
+    // 更新工具栏状态
+    document.getElementById("toolbarUser").innerText = "未登录";
+    document.getElementById("btnLogin").style.display = "inline-block";
+    document.getElementById("btnRegister").style.display = "inline-block";
+    document.getElementById("btnLogout").style.display = "none";
+    document.getElementById("navMine").style.display = "none";
+    document.getElementById("navAdmin").style.display = "none";
+    
+    // 隐藏个人信息栏
+    document.getElementById("myInfoBar").style.display = "none";
 }
 
-// ==================== 登录逻辑 ====================
-function doLogin() {
-    let loginUser = document.getElementById("loginUser").value.trim();
-    let loginPwd = document.getElementById("loginPwd").value;
-
-    if (!loginUser || !loginPwd) return alert("请输入用户名和密码");
-
-    // 超级管理员：admin / admin123
-    if (loginUser.toLowerCase() === "admin") {
-        if (loginPwd !== "admin123") return alert("管理员密码错误");
-        DEMO.currentUser = "admin";
-        DEMO.isSuperAdmin = true;
-        DEMO.userDisplayName = "超级管理员";
-        DEMO.userJoinDate = "2026-05-24";
-    } else {
-        // 普通用户：必须在注册表中且密码匹配
-        if (!DEMO.registeredUsers[loginUser]) return alert("该账号未注册，请先注册");
-        if (DEMO.registeredUsers[loginUser] !== loginPwd) return alert("密码错误");
-        DEMO.currentUser = loginUser;
-        DEMO.isSuperAdmin = false;
-        DEMO.userDisplayName = loginUser;
-        DEMO.userJoinDate = "2026-05-24";
-    }
-
-    // 更新头像（隐藏 "修改姓名/密码" 仅对 admin）
+function showMainApp() {
+    // 隐藏所有页面，再显示主界面
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    document.querySelectorAll(".toolbar-nav button").forEach(b => b.classList.remove("active"));
+    
+    // 显示个人页面
+    document.getElementById("page-mine").classList.add("active");
+    document.getElementById("navMine").classList.add("active");
+    
+    // 更新工具栏状态
+    document.getElementById("toolbarUser").innerText = DEMO.userDisplayName + (DEMO.isSuperAdmin ? "" : " (成员)");
+    document.getElementById("btnLogin").style.display = "none";
+    document.getElementById("btnRegister").style.display = "none";
+    document.getElementById("btnLogout").style.display = "inline-block";
+    document.getElementById("navMine").style.display = "inline-block";
+    document.getElementById("navAdmin").style.display = DEMO.isSuperAdmin ? "inline-block" : "none";
+    
+    // 显示个人信息栏
     document.getElementById("myInfoBar").style.display = "flex";
     document.getElementById("myName").innerText = DEMO.userDisplayName;
     document.getElementById("myRole").innerText = DEMO.isSuperAdmin ? "超级管理员" : "成员";
     document.getElementById("myAvatar").innerText = DEMO.userDisplayName.charAt(0);
     document.getElementById("myJoinDate").innerText = "加入于 " + DEMO.userJoinDate;
-
+    
     // 超级管理员隐藏修改姓名/密码按钮
     if (DEMO.isSuperAdmin) {
         document.querySelector(".btn-edit-name").style.display = "none";
@@ -540,16 +621,123 @@ function doLogin() {
         document.querySelector(".btn-edit-name").style.display = "";
         document.querySelector(".btn-change-pwd").style.display = "";
     }
-
-    document.getElementById("toolbarUser").innerText = DEMO.userDisplayName + (DEMO.isSuperAdmin ? "" : " (成员)");
-    document.getElementById("btnLogin").style.display = "none";
-    document.getElementById("btnRegister").style.display = "none";
-    document.getElementById("btnLogout").style.display = "inline-block";
-    document.getElementById("navAdmin").style.display = DEMO.isSuperAdmin ? "inline-block" : "none";
-
+    
     updateTgBadge();
-    closeModal("loginModal");
-    switchPage("mine");
+    renderMine();
+}
+
+function switchPage(page) {
+    if (page === "mine") {
+        showMainApp();
+    } else if (page === "admin") {
+        document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+        document.querySelectorAll(".toolbar-nav button").forEach(b => b.classList.remove("active"));
+        document.getElementById("page-admin").classList.add("active");
+        document.getElementById("navAdmin").classList.add("active");
+        renderAdmin();
+    }
+}
+
+// ==================== 登录逻辑 ====================
+function doLoginFromPage() {
+    let loginUser = document.getElementById("loginPageUser").value.trim();
+    let loginPwd = document.getElementById("loginPagePwd").value;
+    let msgEl = document.getElementById("loginPageMsg");
+
+    if (!loginUser || !loginPwd) {
+        msgEl.innerText = "请输入用户名和密码";
+        return;
+    }
+
+    msgEl.innerText = "";
+
+    // 超级管理员：admin / admin123
+    if (loginUser.toLowerCase() === "admin") {
+        if (loginPwd !== "admin123") {
+            msgEl.innerText = "管理员密码错误";
+            return;
+        }
+        DEMO.currentUser = "admin";
+        DEMO.isSuperAdmin = true;
+        DEMO.userDisplayName = "超级管理员";
+        DEMO.userJoinDate = "2026-05-24";
+    } else {
+        // 普通用户：必须在注册表中且密码匹配
+        if (!DEMO.registeredUsers[loginUser]) {
+            msgEl.innerText = "该账号未注册，请先注册";
+            return;
+        }
+        if (DEMO.registeredUsers[loginUser].pwd !== loginPwd) {
+            msgEl.innerText = "密码错误";
+            return;
+        }
+        DEMO.currentUser = loginUser;
+        DEMO.isSuperAdmin = false;
+        DEMO.userDisplayName = DEMO.registeredUsers[loginUser].name;
+        DEMO.userJoinDate = "2026-05-24";
+    }
+
+    // 加载用户数据
+    loadCurrentUserData();
+    showMainApp();
+}
+
+function doRegisterFromPage() {
+    let regUser = document.getElementById("regPageUser").value.trim();
+    let regPwd = document.getElementById("regPagePwd").value;
+    let regPwd2 = document.getElementById("regPagePwd2").value;
+    let msgEl = document.getElementById("registerPageMsg");
+
+    if (!regUser) {
+        msgEl.innerText = "请输入用户名";
+        return;
+    }
+    if (regUser.toLowerCase() === "admin") {
+        msgEl.innerText = "该用户名已被占用";
+        return;
+    }
+    if (DEMO.registeredUsers[regUser]) {
+        msgEl.innerText = "该用户名已注册，请直接登录";
+        return;
+    }
+    if (!regPwd) {
+        msgEl.innerText = "请输入密码";
+        return;
+    }
+    if (regPwd.length < 4) {
+        msgEl.innerText = "密码至少 4 位";
+        return;
+    }
+    if (regPwd !== regPwd2) {
+        msgEl.innerText = "两次输入的密码不一致";
+        return;
+    }
+
+    DEMO.registeredUsers[regUser] = { pwd: regPwd, name: regUser };
+    saveData();
+    msgEl.innerText = "注册成功！请使用「" + regUser + "」登录";
+    setTimeout(() => {
+        switchToLogin();
+        document.getElementById("loginPageUser").value = regUser;
+        document.getElementById("loginPagePwd").value = "";
+        document.getElementById("regPageUser").value = "";
+        document.getElementById("regPagePwd").value = "";
+        document.getElementById("regPagePwd2").value = "";
+    }, 1500);
+}
+
+function switchToRegister() {
+    document.getElementById("loginCard").style.display = "none";
+    document.getElementById("registerCard").style.display = "block";
+    document.getElementById("loginPageMsg").innerText = "";
+    document.getElementById("registerPageMsg").innerText = "";
+}
+
+function switchToLogin() {
+    document.getElementById("registerCard").style.display = "none";
+    document.getElementById("loginCard").style.display = "block";
+    document.getElementById("loginPageMsg").innerText = "";
+    document.getElementById("registerPageMsg").innerText = "";
 }
 
 function doRegister() {
@@ -564,7 +752,7 @@ function doRegister() {
     if (regPwd.length < 4) return alert("密码至少 4 位");
     if (regPwd !== regPwd2) return alert("两次输入的密码不一致");
 
-    DEMO.registeredUsers[regUser] = regPwd;
+    DEMO.registeredUsers[regUser] = { pwd: regPwd, name: regUser };
     saveData();
     alert("注册成功！请使用「" + regUser + "」登录");
     closeModal("registerModal");
@@ -575,13 +763,8 @@ function doRegister() {
 
 function doLogout() {
     DEMO.currentUser = null; DEMO.isSuperAdmin = false;
-    document.getElementById("toolbarUser").innerText = "未登录";
-    document.getElementById("btnLogin").style.display = "inline-block";
-    document.getElementById("btnRegister").style.display = "inline-block";
-    document.getElementById("btnLogout").style.display = "none";
-    document.getElementById("navAdmin").style.display = "none";
-    document.getElementById("myInfoBar").style.display = "none";
-    switchPage("mine");
+    DEMO.areas = []; DEMO.locations = {};
+    showLoginPage();
 }
 
 // ==================== 账号操作 ====================
@@ -589,6 +772,11 @@ function saveName() {
     let newName = document.getElementById("newName").value.trim();
     if (!newName) return alert("请输入新姓名");
     DEMO.userDisplayName = newName;
+    // 更新注册表中的姓名
+    if (DEMO.registeredUsers[DEMO.currentUser]) {
+        DEMO.registeredUsers[DEMO.currentUser].name = newName;
+    }
+    saveData();
     document.getElementById("myName").innerText = newName;
     document.getElementById("myAvatar").innerText = newName.charAt(0);
     document.getElementById("toolbarUser").innerText = newName + " (成员)";
@@ -601,11 +789,11 @@ function savePassword() {
     let newP = document.getElementById("newPwd").value;
     let newP2 = document.getElementById("newPwd2").value;
     if (!oldP || !newP) return alert("请填写完整");
-    if (DEMO.registeredUsers[DEMO.currentUser] !== oldP) return alert("当前密码错误");
+    if (DEMO.registeredUsers[DEMO.currentUser].pwd !== oldP) return alert("当前密码错误");
     if (newP.length < 4) return alert("新密码至少 4 位");
     if (newP !== newP2) return alert("两次输入的新密码不一致");
 
-    DEMO.registeredUsers[DEMO.currentUser] = newP;
+    DEMO.registeredUsers[DEMO.currentUser].pwd = newP;
     saveData();
     alert("密码修改成功");
     closeModal("changePwdModal");
@@ -642,12 +830,10 @@ async function uploadToTelegram(file, caption) {
             body: formData
         });
         let json = await resp.json();
-        if (!json.ok) throw new Error(json.description || "上传失败");
-        let photo = json.result.photo;
-        if (photo && photo.length > 0) {
-            let fileId = photo[photo.length - 1].file_id;
-            let getFileResp = await fetch(apiBase + "/bot" + DEMO.tgToken + "/getFile?file_id=" + fileId);
-            let fileJson = await getFileResp.json();
+        if (json.ok) {
+            let fileId = json.result.photo.pop().file_id;
+            let fileResp = await fetch(apiBase + "/bot" + DEMO.tgToken + "/getFile?file_id=" + fileId);
+            let fileJson = await fileResp.json();
             if (fileJson.ok) {
                 return apiBase + "/file/bot" + DEMO.tgToken + "/" + fileJson.result.file_path;
             }
@@ -703,6 +889,14 @@ async function uploadDemo(input, area, locIdx, type) {
 
     // 同步到 adminData
     syncToAdminData(area, locs[locIdx].name, viewDate, rec.before, rec.doing, rec.after);
+    
+    // 保存当前用户数据
+    saveCurrentUserData();
+
+    // 如果当前是管理后台页面，自动刷新显示
+    if (document.getElementById("page-admin").classList.contains("active")) {
+        renderAdmin();
+    }
 
     // 完成进度条
     progressFill.classList.remove("indeterminate");
@@ -711,13 +905,12 @@ async function uploadDemo(input, area, locIdx, type) {
         progressText.textContent = "上传成功";
     } else if (DEMO.tgToken && DEMO.tgChatId) {
         progressBar.classList.add("error");
-        progressText.textContent = "上传失败";
+        progressText.textContent = "TG上传失败，仅保存本地";
     } else {
         progressBar.classList.add("success");
-        progressText.textContent = "本地保存成功";
+        progressText.textContent = "保存成功";
     }
     setTimeout(() => progressBar.classList.remove("show"), 2000);
-    input.value = "";
 }
 
 function syncToAdminData(area, locName, date, before, doing, after) {
@@ -740,7 +933,7 @@ function addArea() {
     closeModal("areaModal");
     document.getElementById("newAreaName").value = "";
     renderMine();
-    saveData();
+    saveCurrentUserData();
 }
 
 function selectExistingArea() {
@@ -753,17 +946,16 @@ function selectExistingArea() {
     }
     closeModal("selectAreaModal");
     renderMine();
-    saveData();
+    saveCurrentUserData();
 }
 
 function addLocation(area) {
     DEMO.locations[area].push({ name: "位置" + (DEMO.locations[area].length + 1), records: [] });
     renderMine();
-    saveData();
+    saveCurrentUserData();
 }
 
 function deleteArea(area) {
-    if (DEMO.areas.length <= 1) return alert("至少保留一个区域");
     document.getElementById("confirmTitle").innerText = "删除区域";
     document.getElementById("confirmText").innerText = "确定删除区域「" + area + "」及所有影像数据？";
     document.getElementById("confirmOkBtn").onclick = function() {
@@ -771,7 +963,7 @@ function deleteArea(area) {
         DEMO.areas = DEMO.areas.filter(a => a !== area);
         closeModal("confirmModal");
         renderMine();
-        saveData();
+        saveCurrentUserData();
     };
     openModal("confirmModal");
 }
@@ -783,15 +975,15 @@ function deleteSingleLoc(area, locIdx) {
     document.getElementById("confirmOkBtn").onclick = function() {
         locs.splice(locIdx, 1);
         locs.forEach((l, i) => l.name = "位置" + (i + 1));
-        if (locs.length === 0) delete DEMO.locations[area];
+        // 保留空数组，避免 addLocation 时 push 到 undefined 上
         closeModal("confirmModal");
         renderMine();
-        saveData();
+        saveCurrentUserData();
     };
     openModal("confirmModal");
 }
 
-// ==================== 我的项目渲染 ====================
+// ==================== 渲染 ====================
 function renderMine() {
     let viewDate = document.getElementById("viewDate").value || todayStr();
     let container = document.getElementById("areaCards");
@@ -810,7 +1002,6 @@ function renderMine() {
 
     DEMO.areas.forEach(area => {
         let locs = DEMO.locations[area] || [];
-        if (locs.length === 0) return;
 
         let rows = "", cardsHtml = "";
         locs.forEach((loc, locIdx) => {
@@ -842,36 +1033,39 @@ function renderMine() {
             let makeMobileImg = function(type) {
                 let url = rec[type] || "";
                 if (url) {
-                    return '<img src="' + url + '" onerror="this.parentElement.innerHTML=\'<div class=no-img-mobile>加载失败</div>\'">' +
-                        '<label class="upload-btn-mobile">替换<input type="file" class="file-input" accept="image/*" onchange="uploadDemo(this,\''+area+'\','+locIdx+',\''+type+'\')"></label>';
+                    return '<img src="' + url + '" class="loc-img" onerror="this.parentElement.innerHTML=\'<div class=loc-no-img>加载失败</div>\'">' +
+                        '<div style="font-size:10px;color:#888;text-align:center;margin-top:2px;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + rec[type+"Name"] + '">' + (rec[type+"Name"] || "已上传") + '</div>';
                 }
-                return '<div class="no-img-mobile">上传图片</div>' +
-                    '<label class="upload-btn-mobile">选择<input type="file" class="file-input" accept="image/*" onchange="uploadDemo(this,\''+area+'\','+locIdx+',\''+type+'\')"></label>';
+                return '<div class="loc-no-img">上传图片</div>';
             };
-
-            let areaTag = locIdx === 0 ? '<div style="font-size:13px;font-weight:700;color:#2980b9;margin-bottom:6px">' + area + '</div>' : '';
-            cardsHtml += areaTag +
+            cardsHtml +=
                 '<div class="loc-card">' +
-                    '<div class="loc-header"><span class="loc-title">' + loc.name + '</span><span class="loc-del" onclick="deleteSingleLoc(\''+area+'\','+locIdx+')">删除</span></div>' +
-                    '<div class="img-grid">' +
-                        '<div class="img-item"><span class="img-label">施工前</span>' + makeMobileImg("before") + '</div>' +
-                        '<div class="img-item"><span class="img-label">施工中</span>' + makeMobileImg("doing") + '</div>' +
-                        '<div class="img-item"><span class="img-label">施工后</span>' + makeMobileImg("after") + '</div>' +
-                    '</div></div>';
+                    '<div class="loc-name">' + loc.name + '</div>' +
+                    '<div class="loc-imgs">' +
+                        '<div class="loc-col"><span class="loc-label">施工前</span>' + makeMobileImg("before") +
+                            '<label class="loc-upload-btn">选择文件<input type="file" accept="image/*" onchange="uploadDemo(this,\''+area+'\','+locIdx+',\'before\')"></label></div>' +
+                        '<div class="loc-col"><span class="loc-label">施工中</span>' + makeMobileImg("doing") +
+                            '<label class="loc-upload-btn">选择文件<input type="file" accept="image/*" onchange="uploadDemo(this,\''+area+'\','+locIdx+',\'doing\')"></label></div>' +
+                        '<div class="loc-col"><span class="loc-label">施工后</span>' + makeMobileImg("after") +
+                            '<label class="loc-upload-btn">选择文件<input type="file" accept="image/*" onchange="uploadDemo(this,\''+area+'\','+locIdx+',\'after\')"></label></div>' +
+                    '</div>' +
+                    '<button class="loc-del-btn" onclick="deleteSingleLoc(\''+area+'\','+locIdx+')">删除位置</button>' +
+                '</div>';
         });
-
-        let areaActions = '<button class="btn-add-loc" onclick="addLocation(\''+area+'\')">＋ 添加位置</button>';
-        if (DEMO.isSuperAdmin) areaActions += '<button class="btn-del-area" onclick="deleteArea(\''+area+'\')">删除区域</button>';
 
         let card = document.createElement("div");
         card.className = "area-card";
         card.innerHTML =
-            '<div class="area-card-header">' +
-                '<h3>' + area + '<span class="area-count">共 ' + locs.length + ' 个位置</span></h3>' +
-                '<div class="area-actions">' + areaActions + '</div></div>' +
-            '<table class="data-table-desktop"><thead><tr>' +
-                '<th style="width:100px">区域</th><th style="width:80px">位置</th><th style="width:200px">施工前</th><th style="width:200px">施工中</th><th style="width:200px">施工后</th><th style="width:60px">操作</th>' +
-            '</tr></thead><tbody>' + rows + '</tbody></table>' +
+            '<div class="area-header">' +
+                '<div class="area-title">' + area + '</div>' +
+                '<div class="area-actions">' +
+                    '<button onclick="addLocation(\''+area+'\')">＋ 添加位置</button>' +
+                    '<button class="btn-del-area" onclick="deleteArea(\''+area+'\')">删除区域</button>' +
+                '</div>' +
+            '</div>' +
+            '<div class="table-container"><table class="area-table"><thead><tr>' +
+                '<th style="width:100px">区域</th><th style="width:100px">位置</th><th style="width:120px">施工前</th><th style="width:120px">施工中</th><th style="width:120px">施工后</th><th style="width:60px">操作</th>' +
+            '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
             '<div class="add-loc-area"><button onclick="addLocation(\''+area+'\')">＋ 添加位置</button></div>' +
             '<div class="loc-cards">' + cardsHtml +
                 '<div class="mobile-add-loc"><button onclick="addLocation(\''+area+'\')">＋ 添加位置</button></div>' +
@@ -947,10 +1141,8 @@ function renderAdmin() {
 
         let userCounter = {}, areaCounter = {};
         items.forEach(d => {
-            let uk = d.user, ak = d.user + "|" + d.area;
-            let isFirstUser = !userCounter[uk], isFirstArea = !areaCounter[ak];
-            userCounter[uk] = (userCounter[uk] || 0) + 1;
-            areaCounter[ak] = (areaCounter[ak] || 0) + 1;
+            let isFirstUser = (userCounter[d.user] = (userCounter[d.user] || 0) + 1) === 1;
+            let isFirstArea = (areaCounter[d.user+"|"+d.area] = (areaCounter[d.user+"|"+d.area] || 0) + 1) === 1;
 
             let makeThumb = function(url, isFirst) {
                 let cls = isFirst ? "td-before" : "";
@@ -958,8 +1150,8 @@ function renderAdmin() {
                 return '<td class="'+cls+'"><span class="admin-no-img">—</span></td>';
             };
 
-            let userCell = isFirstUser ? '<td class="td-user" rowspan="'+userSpans[uk]+'">'+d.user+'</td>' : '';
-            let areaCell = isFirstArea ? '<td class="td-area" rowspan="'+areaSpans[ak]+'">'+d.area+'</td>' : '';
+            let userCell = isFirstUser ? '<td class="td-user" rowspan="'+userSpans[d.user]+'">'+d.user+'</td>' : '';
+            let areaCell = isFirstArea ? '<td class="td-area" rowspan="'+areaSpans[d.user+"|"+d.area]+'">'+d.area+'</td>' : '';
 
             desktopRows += '<tr>' + userCell + areaCell +
                 '<td class="td-loc">'+d.loc+'</td>' +
@@ -1007,18 +1199,26 @@ function renderAdmin() {
 }
 
 // ==================== 导出 ====================
-// 将图片 URL 转为 base64，失败返回 null
-async function urlToBase64(url) {
+// 将图片 URL 转为 base64 并获取尺寸，失败返回 null
+async function urlToBase64WithSize(url) {
     if (!url) return null;
     try {
         let resp = await fetch(url);
         let blob = await resp.blob();
-        return new Promise((resolve) => {
+        let base64 = await new Promise((resolve) => {
             let reader = new FileReader();
             reader.onloadend = () => resolve(reader.result);
             reader.onerror = () => resolve(null);
             reader.readAsDataURL(blob);
         });
+        if (!base64) return null;
+        let size = await new Promise((resolve) => {
+            let img = new Image();
+            img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
+            img.onerror = () => resolve(null);
+            img.src = base64;
+        });
+        return { base64, size };
     } catch(e) { return null; }
 }
 
@@ -1033,54 +1233,40 @@ function getWeekRange() {
     return { from: fmt(monday), to: fmt(sunday) };
 }
 
-function getMonthRange() {
-    let now = new Date();
-    let from = now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-01";
-    let lastDay = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
-    let to = now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-"+String(lastDay).padStart(2,"0");
-    return { from, to };
-}
-
-// 收集"我的项目"导出数据
 function collectMyExportData(type) {
-    let today = todayStr();
-    let range;
-    if (type === "daily") { range = { from: today, to: today }; }
-    else if (type === "weekly") { range = getWeekRange(); }
-    else if (type === "monthly") { range = getMonthRange(); }
-    else { range = { from: "0000-00-00", to: "9999-99-99" }; }
-
     let rows = [];
+    let viewDate = document.getElementById("viewDate").value || todayStr();
+    let now = new Date();
+    let weekRange = getWeekRange();
+    let monthStart = now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-01";
+
     DEMO.areas.forEach(area => {
         let locs = DEMO.locations[area] || [];
         locs.forEach(loc => {
             (loc.records || []).forEach(rec => {
-                if (rec.date >= range.from && rec.date <= range.to) {
-                    rows.push({ area, loc: loc.name, date: rec.date, before: rec.before, doing: rec.doing, after: rec.after });
-                }
+                if (type === "daily" && rec.date !== viewDate) return;
+                if (type === "weekly" && (rec.date < weekRange.from || rec.date > weekRange.to)) return;
+                if (type === "monthly" && rec.date < monthStart) return;
+                rows.push({ area: area, loc: loc.name, date: rec.date, before: rec.before, doing: rec.doing, after: rec.after });
             });
         });
     });
     return rows;
 }
 
-// 收集管理后台导出数据
 function collectAdminExportData(type) {
-    let today = todayStr();
-    let range;
-    if (type === "daily") { range = { from: today, to: today }; }
-    else if (type === "weekly") { range = getWeekRange(); }
-    else if (type === "monthly") { range = getMonthRange(); }
-    else { range = { from: "0000-00-00", to: "9999-99-99" }; }
+    let rows = [];
+    let now = new Date();
+    let weekRange = getWeekRange();
+    let monthStart = now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0")+"-01";
 
-    let site = document.getElementById("adminSiteFilter").value;
-    return DEMO.adminData.filter(d => {
-        if (d.user === "admin") return false;
-        if (site && d.area !== site) return false;
-        if (range.from !== "0000-00-00" && d.date < range.from) return false;
-        if (range.to !== "9999-99-99" && d.date > range.to) return false;
-        return true;
+    DEMO.adminData.forEach(d => {
+        if (type === "daily" && d.date !== todayStr()) return;
+        if (type === "weekly" && (d.date < weekRange.from || d.date > weekRange.to)) return;
+        if (type === "monthly" && d.date < monthStart) return;
+        rows.push(d);
     });
+    return rows;
 }
 
 async function exportMy(type) {
@@ -1091,7 +1277,6 @@ async function exportMy(type) {
     let wb = new ExcelJS.Workbook();
     let ws = wb.addWorksheet(label);
 
-    // 表头
     ws.columns = [
         { header: "区域", key: "area", width: 14 },
         { header: "位置", key: "loc", width: 10 },
@@ -1101,7 +1286,6 @@ async function exportMy(type) {
         { header: "施工后", key: "after", width: 22 }
     ];
 
-    // 表头样式
     let headerRow = ws.getRow(1);
     headerRow.height = 24;
     headerRow.eachCell(cell => {
@@ -1111,7 +1295,6 @@ async function exportMy(type) {
         cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
     });
 
-    // 数据行
     for (let i = 0; i < rows.length; i++) {
         let r = rows[i];
         let rowIdx = i + 2;
@@ -1123,16 +1306,23 @@ async function exportMy(type) {
             cell.border = { top: { style: "thin" }, left: { style: "thin" }, bottom: { style: "thin" }, right: { style: "thin" } };
         });
 
-        // 嵌入图片
         for (let k of ["before", "doing", "after"]) {
             let colIdx = { before: 4, doing: 5, after: 6 }[k];
             let url = r[k];
             if (!url) continue;
-            let b64 = await urlToBase64(url);
-            if (!b64) continue;
+            let info = await urlToBase64WithSize(url);
+            if (!info) continue;
             try {
-                let imgId = wb.addImage({ base64: b64, extension: "png" });
-                ws.addImage(imgId, { tl: { col: colIdx - 1, row: rowIdx - 1 }, ext: { width: 120, height: 85 } });
+                let imgId = wb.addImage({ base64: info.base64, extension: "png" });
+                // 单元格有效空间: 宽约148px, 高约82px, 按原图比例缩放居中
+                let cellW = 148, cellH = 82;
+                let scale = Math.min(cellW / info.size.width, cellH / info.size.height);
+                let diW = Math.round(info.size.width * scale);
+                let diH = Math.round(info.size.height * scale);
+                ws.addImage(imgId, {
+                    tl: { col: colIdx - 1, row: rowIdx - 1, colOffset: Math.round((cellW - diW) / 2 * 9525), rowOffset: Math.round((cellH - diH) / 2 * 9525) },
+                    ext: { width: diW, height: diH }
+                });
             } catch(e) {}
         }
     }
@@ -1193,11 +1383,18 @@ async function exportAdmin(type) {
             let colIdx = { before: 5, doing: 6, after: 7 }[k];
             let url = r[k];
             if (!url) continue;
-            let b64 = await urlToBase64(url);
-            if (!b64) continue;
+            let info = await urlToBase64WithSize(url);
+            if (!info) continue;
             try {
-                let imgId = wb.addImage({ base64: b64, extension: "png" });
-                ws.addImage(imgId, { tl: { col: colIdx - 1, row: rowIdx - 1 }, ext: { width: 120, height: 85 } });
+                let imgId = wb.addImage({ base64: info.base64, extension: "png" });
+                let cellW = 148, cellH = 82;
+                let scale = Math.min(cellW / info.size.width, cellH / info.size.height);
+                let diW = Math.round(info.size.width * scale);
+                let diH = Math.round(info.size.height * scale);
+                ws.addImage(imgId, {
+                    tl: { col: colIdx - 1, row: rowIdx - 1, colOffset: Math.round((cellW - diW) / 2 * 9525), rowOffset: Math.round((cellH - diH) / 2 * 9525) },
+                    ext: { width: diW, height: diH }
+                });
             } catch(e) {}
         }
     }
@@ -1232,7 +1429,25 @@ function downloadBlob(buf, filename) {
 window.onload = function() {
     document.getElementById("viewDate").value = todayStr();
     loadData();
-    renderMine();
+    // 初始显示登录页面
+    showLoginPage();
+    
+    // 监听 storage 事件实现跨标签页同步
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'gc_cm_data') {
+            loadData();
+            if (document.getElementById("page-admin").classList.contains("active")) {
+                renderAdmin();
+            }
+        }
+    });
+    
+    // 管理后台自动刷新定时器（每30秒检查一次）
+    setInterval(function() {
+        if (document.getElementById("page-admin").classList.contains("active")) {
+            renderAdmin();
+        }
+    }, 30000);
 };
 </script>
 </body>
