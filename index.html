@@ -1600,79 +1600,67 @@ async function addWatermark(imageFile, areaName, userName) {
             const weekDay = weekDays[now.getDay()];
             const dateStr = `${year}.${month}.${day} 星期${weekDay} · ${areaName}`;
             
-            // 水印整体尺寸（图片宽度的 40%）
-            const watermarkWidth = img.width * 0.4;
-            const padding = 12;
-            const margin = 25; // 距离边缘距离
+            // 样式三：圆角信息卡片（右下角）
+            const margin = 20; // 距离边缘距离
+            const padding = 14; // 内边距
             
-            // 计算水印位置（左下角）
-            const watermarkX = margin;
-            const watermarkY = img.height - margin;
+            // 字体大小（根据图片尺寸自适应）
+            const fontSize = Math.max(13, img.height * 0.018);
+            const bigFont = Math.max(26, img.height * 0.038);
             
-            // 字体设置
-            const areaFont = `bold ${Math.max(14, img.width * 0.02)}px "Microsoft YaHei", "PingFang SC", sans-serif`;
-            const timeFont = `bold ${Math.max(28, img.width * 0.04)}px "Microsoft YaHei", "PingFang SC", sans-serif`;
-            const dateFont = `${Math.max(12, img.width * 0.015)}px "Microsoft YaHei", "PingFang SC", sans-serif`;
+            // 测量文本宽度
+            ctx.font = `${fontSize}px "Microsoft YaHei", "PingFang SC", sans-serif`;
+            const areaWidth = ctx.measureText(areaName).width + padding * 3;
+            ctx.font = `bold ${bigFont}px "Microsoft YaHei", "PingFang SC", sans-serif`;
+            const timeWidth = ctx.measureText(timeStr).width + padding * 2;
+            ctx.font = `${Math.max(11, img.height * 0.014)}px "Microsoft YaHei", "PingFang SC", sans-serif`;
+            const dateWidth = ctx.measureText(dateStr).width + padding * 2;
             
-            // 测量文本尺寸
-            ctx.font = areaFont;
-            const areaMetrics = ctx.measureText(areaName);
-            ctx.font = timeFont;
-            const timeMetrics = ctx.measureText(timeStr);
-            ctx.font = dateFont;
-            const dateMetrics = ctx.measureText(dateStr);
+            // 卡片宽度（取最大值，或图片宽度的 28%）
+            const cardWidth = Math.max(areaWidth, timeWidth, dateWidth, img.width * 0.28);
+            const cardHeight = Math.max(100, img.height * 0.16);
             
-            // 确定各部分宽度
-            const areaWidth = areaMetrics.width + padding * 2;
-            const timeWidth = timeMetrics.width + padding * 2;
-            const dateWidth = dateMetrics.width + padding * 2;
-            const maxWidth = Math.max(areaWidth, timeWidth, dateWidth, watermarkWidth);
+            // 卡片位置（右下角）
+            const cardX = img.width - margin - cardWidth;
+            const cardY = img.height - margin - cardHeight;
             
-            // 计算各部分高度
-            const areaHeight = Math.max(24, img.height * 0.03);
-            const timeHeight = Math.max(40, img.height * 0.05);
-            const dateHeight = Math.max(18, img.height * 0.02);
-            const totalHeight = areaHeight + timeHeight + dateHeight;
-            
-            // 绘制水印背景（半透明黑色，增强可读性）
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-            ctx.fillRect(watermarkX - padding, watermarkY - totalHeight - padding * 3, 
-                        maxWidth, totalHeight + padding * 3);
-            
-            // 绘制区域标签（蓝底白字圆角矩形）
-            const areaY = watermarkY - totalHeight;
-            ctx.fillStyle = '#2980b9';
-            roundRect(ctx, watermarkX, areaY, maxWidth, areaHeight, 6);
+            // 绘制卡片背景（半透明黑色）
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+            roundRect(ctx, cardX, cardY, cardWidth, cardHeight, 10);
             ctx.fill();
             
-            ctx.fillStyle = '#ffffff';
-            ctx.font = areaFont;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(areaName, watermarkX + maxWidth / 2, areaY + areaHeight / 2);
+            // 卡片边框（浅色细线）
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+            ctx.lineWidth = 1;
+            roundRect(ctx, cardX, cardY, cardWidth, cardHeight, 10);
+            ctx.stroke();
             
-            // 绘制时间数字（白底深蓝色）
-            const timeY = areaY + areaHeight;
-            ctx.fillStyle = '#ffffff';
-            roundRect(ctx, watermarkX, timeY, maxWidth, timeHeight, 4);
+            // 顶部蓝色标签条
+            const tagHeight = Math.max(28, img.height * 0.04);
+            ctx.fillStyle = '#3498db';
+            roundRect(ctx, cardX, cardY, cardWidth, tagHeight, 10);
             ctx.fill();
             
-            ctx.fillStyle = '#1a3a5c';
-            ctx.font = timeFont;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(timeStr, watermarkX + maxWidth / 2, timeY + timeHeight / 2);
+            // 标签条底部渐变过渡
+            ctx.fillRect(cardX, cardY + tagHeight - 5, cardWidth, 5);
             
-            // 绘制底部日期信息（半透明白色）
-            const dateY = timeY + timeHeight;
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
-            ctx.font = dateFont;
+            // 区域名称（白色，居中）
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `bold ${fontSize}px "Microsoft YaHei", "PingFang SC", sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-            ctx.shadowBlur = 2;
-            ctx.fillText(dateStr, watermarkX + maxWidth / 2, dateY + dateHeight / 2);
-            ctx.shadowBlur = 0; // 重置阴影
+            ctx.fillText(areaName, cardX + cardWidth / 2, cardY + Math.max(14, img.height * 0.02));
+            
+            // 时间（大号白色）
+            ctx.fillStyle = '#ffffff';
+            ctx.font = `bold ${bigFont}px "Microsoft YaHei", "PingFang SC", sans-serif`;
+            const timeY = cardY + tagHeight + Math.max(32, img.height * 0.055);
+            ctx.fillText(timeStr, cardX + cardWidth / 2, timeY);
+            
+            // 日期（浅灰色）
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.font = `${Math.max(11, img.height * 0.014)}px "Microsoft YaHei", "PingFang SC", sans-serif`;
+            ctx.fillText(dateStr, cardX + cardWidth / 2, timeY + Math.max(24, img.height * 0.04));
             
             // 转换为 Blob
             canvas.toBlob(blob => {
