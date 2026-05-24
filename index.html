@@ -640,8 +640,9 @@ const syncManager = {
                     let fileInfo = await getResp.json();
                     sha = fileInfo.sha;
                 }
+                // 404 表示首次上传，正常忽略
             } catch(e) {
-                // 文件不存在，继续创建
+                // 网络问题，静默处理
             }
             
             let body = {
@@ -702,7 +703,7 @@ const syncManager = {
                 console.log(`用户 ${username} 数据下载成功`);
                 return data;
             } else if (resp.status === 404) {
-                console.log(`用户 ${username} 数据不存在于云端`);
+                // 首次同步，云端无数据，正常情况
                 return null;
             } else {
                 let error = await resp.text();
