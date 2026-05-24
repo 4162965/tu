@@ -1467,7 +1467,7 @@ function deleteMember() {
 
 // ==================== 管理员删除功能 ====================
 function deleteAdminRecord(user, area, loc, date) {
-    if (!confirm("确定删除「" + user + "」在 " + date + " 于「" + area + " - " + loc + "」的记录吗？")) return;
+    if (!confirm("确定删除「" + user + "」在 " + date + " 于「" + area + " - " + loc + "」的记录吗？\n\n如需删除该位置所有日期的记录，请点击「删除整列」按钮。")) return;
     
     // 从 adminData 中删除
     DEMO.adminData = DEMO.adminData.filter(d =>
@@ -1488,6 +1488,34 @@ function deleteAdminRecord(user, area, loc, date) {
     // 同步到云端
     if (syncManager.enabled) {
         setTimeout(() => syncManager.syncAllUsers().catch(e => console.error("删除记录同步失败:", e)), 200);
+    }
+    // 刷新管理后台视图
+    renderAdmin();
+}
+
+// 删除成员某个位置的所有记录（整列）
+function deleteAdminLocation(user, area, loc) {
+    if (!confirm("确定删除「" + user + "」在「" + area + " - " + loc + "」的所有记录吗？\n这将删除该位置所有日期的数据，操作不可恢复。")) return;
+    
+    // 从 adminData 中删除该位置所有记录
+    DEMO.adminData = DEMO.adminData.filter(d =>
+        !(d.user === user && d.area === area && d.loc === loc)
+    );
+    
+    // 从 allUserData 中清空该位置的所有记录
+    if (DEMO.allUserData[user] && DEMO.allUserData[user].locations && DEMO.allUserData[user].locations[area]) {
+        let locs = DEMO.allUserData[user].locations[area];
+        locs.forEach(l => {
+            if (l.name === loc && l.records) {
+                l.records = []; // 清空该位置所有记录
+            }
+        });
+    }
+    
+    saveData();
+    // 同步到云端
+    if (syncManager.enabled) {
+        setTimeout(() => syncManager.syncAllUsers().catch(e => console.error("删除位置记录同步失败:", e)), 200);
     }
     // 刷新管理后台视图
     renderAdmin();
@@ -1518,7 +1546,7 @@ function deleteMemberAllData(user) {
 }
 
 // ==================== 水印合成 ====================
-async function addWatermark(imageFile, areaName, locName, userName) {
+async function addWatermark(imageFile, areaName, userName) {
     return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = function() {
@@ -1545,7 +1573,7 @@ async function addWatermark(imageFile, areaName, locName, userName) {
             const day = String(now.getDate()).padStart(2, '0');
             const weekDays = ['日', '一', '二', '三', '四', '五', '六'];
             const weekDay = weekDays[now.getDay()];
-            const dateStr = `${year}.${month}.${day} 星期${weekDay} · ${locName}`;
+            const dateStr = `${year}.${month}.${day} 星期${weekDay} · ${areaName}`;
             
             // 水印整体尺寸（图片宽度的 40%）
             const watermarkWidth = img.width * 0.4;
@@ -1560,7 +1588,6 @@ async function addWatermark(imageFile, areaName, locName, userName) {
             const areaFont = `bold ${Math.max(14, img.width * 0.02)}px "Microsoft YaHei", "PingFang SC", sans-serif`;
             const timeFont = `bold ${Math.max(28, img.width * 0.04)}px "Microsoft YaHei", "PingFang SC", sans-serif`;
             const dateFont = `${Math.max(12, img.width * 0.015)}px "Microsoft YaHei", "PingFang SC", sans-serif`;
-            const userFont = `bold ${Math.max(16, img.width * 0.025)}px "Microsoft YaHei", "PingFang SC", sans-serif`;
             
             // 测量文本尺寸
             ctx.font = areaFont;
@@ -1569,42 +1596,26 @@ async function addWatermark(imageFile, areaName, locName, userName) {
             const timeMetrics = ctx.measureText(timeStr);
             ctx.font = dateFont;
             const dateMetrics = ctx.measureText(dateStr);
-            ctx.font = userFont;
-            const userMetrics = ctx.measureText(userName);
             
             // 确定各部分宽度
             const areaWidth = areaMetrics.width + padding * 2;
             const timeWidth = timeMetrics.width + padding * 2;
             const dateWidth = dateMetrics.width + padding * 2;
-            const userWidth = userMetrics.width + padding * 2;
-            const maxWidth = Math.max(areaWidth, timeWidth, dateWidth, userWidth, watermarkWidth);
+            const maxWidth = Math.max(areaWidth, timeWidth, dateWidth, watermarkWidth);
             
             // 计算各部分高度
             const areaHeight = Math.max(24, img.height * 0.03);
             const timeHeight = Math.max(40, img.height * 0.05);
             const dateHeight = Math.max(18, img.height * 0.02);
-            const userHeight = Math.max(28, img.height * 0.035);
-            const totalHeight = userHeight + areaHeight + timeHeight + dateHeight;
+            const totalHeight = areaHeight + timeHeight + dateHeight;
             
             // 绘制水印背景（半透明黑色，增强可读性）
             ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-            ctx.fillRect(watermarkX - padding, watermarkY - totalHeight - padding * 4, 
-                        maxWidth, totalHeight + padding * 4);
-            
-            // 绘制用户姓名（橙底白字）
-            const userY = watermarkY - totalHeight;
-            ctx.fillStyle = '#e67e22';
-            roundRect(ctx, watermarkX, userY, maxWidth, userHeight, 6);
-            ctx.fill();
-            
-            ctx.fillStyle = '#ffffff';
-            ctx.font = userFont;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(userName, watermarkX + maxWidth / 2, userY + userHeight / 2);
+            ctx.fillRect(watermarkX - padding, watermarkY - totalHeight - padding * 3, 
+                        maxWidth, totalHeight + padding * 3);
             
             // 绘制区域标签（蓝底白字圆角矩形）
-            const areaY = userY + userHeight;
+            const areaY = watermarkY - totalHeight;
             ctx.fillStyle = '#2980b9';
             roundRect(ctx, watermarkX, areaY, maxWidth, areaHeight, 6);
             ctx.fill();
@@ -1726,7 +1737,7 @@ async function uploadDemo(input, area, locIdx, type) {
     let watermarkBlob = null;
     try {
         let locName = locs[locIdx].name;
-        watermarkBlob = await addWatermark(file, area, locName, DEMO.userDisplayName || DEMO.currentUser);
+        watermarkBlob = await addWatermark(file, area, DEMO.userDisplayName || DEMO.currentUser);
     } catch(e) {
         console.error("水印合成失败:", e);
         watermarkBlob = file; // 降级使用原图
@@ -2026,7 +2037,7 @@ function renderAdmin() {
                 makeThumb(d.before, true) +
                 makeThumb(d.doing, false) +
                 makeThumb(d.after, false) +
-                '<td style="text-align:center;width:50px"><button onclick="deleteAdminRecord('+JSON.stringify(d.user)+','+JSON.stringify(d.area)+','+JSON.stringify(d.loc)+','+JSON.stringify(d.date)+')" style="padding:2px 6px;background:#e74c3c;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:10px">删除</button></td></tr>';
+                '<td style="text-align:center;width:80px"><button onclick="deleteAdminRecord('+JSON.stringify(d.user)+','+JSON.stringify(d.area)+','+JSON.stringify(d.loc)+','+JSON.stringify(d.date)+')" style="padding:2px 6px;background:#e74c3c;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:10px">删除</button> <button onclick="deleteAdminLocation('+JSON.stringify(d.user)+','+JSON.stringify(d.area)+','+JSON.stringify(d.loc)+')" style="padding:2px 6px;background:#c0392b;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:9px" title="删除该位置所有日期记录">整列</button></td></tr>';
         });
 
         let mobileCards = "";
@@ -2047,6 +2058,7 @@ function renderAdmin() {
                     '</div>' +
                     '<div style="text-align:right;margin-top:6px">' +
                         '<button onclick="deleteAdminRecord('+JSON.stringify(d.user)+','+JSON.stringify(d.area)+','+JSON.stringify(d.loc)+','+JSON.stringify(d.date)+')" style="padding:2px 8px;background:#e74c3c;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px">删除此条</button>' +
+                    ' <button onclick="deleteAdminLocation('+JSON.stringify(d.user)+','+JSON.stringify(d.area)+','+JSON.stringify(d.loc)+')" style="padding:2px 8px;background:#c0392b;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px" title="删除该位置所有日期记录">删除整列</button>' +
                     '</div></div>';
         });
 
