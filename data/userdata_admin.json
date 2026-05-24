@@ -7,7 +7,17 @@
     "六祖大道": [
       {
         "name": "位置1",
-        "records": []
+        "records": [
+          {
+            "date": "2026-05-24",
+            "before": "https://1000006.xyz/file/bot8427494834:AAGN47L0zLR_tSNL_ObBse1FbJjUfUAqegQ/photos/file_328.jpg",
+            "doing": "",
+            "after": "",
+            "bName": "sunpanel-1.png",
+            "dName": "",
+            "aName": ""
+          }
+        ]
       }
     ],
     "核心区": [
