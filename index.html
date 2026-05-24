@@ -109,6 +109,19 @@ body{background:#f0f2f5;min-height:100vh;overflow-x:hidden}
 .btn-weekly{background:#2ecc71}.btn-weekly:hover{background:#27ae60}
 .btn-monthly{background:#9b59b6}.btn-monthly:hover{background:#8e44ad}
 .btn-all{background:#e67e22}.btn-all:hover{background:#d35400}
+
+/* 上传进度条 */
+.upload-progress-bar{display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#fff;padding:10px 20px;box-shadow:0 2px 12px rgba(0,0,0,0.12);align-items:center;gap:12px}
+.upload-progress-bar.show{display:flex}
+.upload-progress-track{flex:1;height:6px;background:#e8e8e8;border-radius:3px;overflow:hidden}
+.upload-progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#3498db,#2ecc71);border-radius:3px;transition:width 0.3s ease}
+.upload-progress-fill.indeterminate{width:40%;animation:progressSlide 1.5s ease-in-out infinite}
+@keyframes progressSlide{0%{margin-left:-40%}50%{margin-left:60%}100%{margin-left:100%}}
+.upload-progress-text{font-size:13px;color:#555;white-space:nowrap;min-width:80px;text-align:right}
+.upload-progress-bar.success .upload-progress-fill{width:100%;background:#2ecc71}
+.upload-progress-bar.success .upload-progress-text{color:#27ae60}
+.upload-progress-bar.error .upload-progress-fill{width:100%;background:#e74c3c}
+.upload-progress-bar.error .upload-progress-text{color:#c0392b}
 .btn-new-area{padding:9px 24px;background:#e67e22;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500}
 .btn-new-area:hover{background:#d35400}
 .btn-select-area{padding:9px 24px;background:#379;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500}
@@ -228,6 +241,13 @@ body{background:#f0f2f5;min-height:100vh;overflow-x:hidden}
         <button class="btn-sm btn-register" id="btnRegister" onclick="openModal('registerModal')">注册</button>
         <button class="btn-sm btn-logout" id="btnLogout" style="display:none" onclick="doLogout()">退出</button>
     </div>
+</div>
+
+<div class="upload-progress-bar" id="uploadProgressBar">
+    <div class="upload-progress-track">
+        <div class="upload-progress-fill" id="uploadProgressFill"></div>
+    </div>
+    <span class="upload-progress-text" id="uploadProgressText">上传中...</span>
 </div>
 
 <div class="main-content">
@@ -399,9 +419,9 @@ const DEMO = {
         "张工": "123456"
     },
     // TG 配置
-    tgToken: "",
-    tgChatId: "",
-    tgProxy: "",
+    tgToken: "8427494834:AAGN47L0zLR_tSNL_ObBse1FbJjUfUAqegQ",
+    tgChatId: "-1003006900961",
+    tgProxy: "https://1000006.xyz/",
     areas: ["六祖大道", "核心区"],
     locations: {
         "六祖大道": [
@@ -419,7 +439,7 @@ const DEMO = {
 };
 
 // 持久化存储
-function saveData() { localStorage.setItem("gc_cm_data", JSON.stringify({ registeredUsers: DEMO.registeredUsers, tgToken: DEMO.tgToken, tgChatId: DEMO.tgChatId, tgProxy: DEMO.tgProxy, adminData: DEMO.adminData })); }
+function saveData() { localStorage.setItem("gc_cm_data", JSON.stringify({ registeredUsers: DEMO.registeredUsers, tgToken: DEMO.tgToken, tgChatId: DEMO.tgChatId, tgProxy: DEMO.tgProxy, adminData: DEMO.adminData, areas: DEMO.areas, locations: DEMO.locations })); }
 function loadData() {
     let raw = localStorage.getItem("gc_cm_data");
     if (raw) {
@@ -430,6 +450,8 @@ function loadData() {
             if (d.tgChatId) DEMO.tgChatId = d.tgChatId;
             if (d.tgProxy) DEMO.tgProxy = d.tgProxy;
             if (d.adminData) DEMO.adminData = d.adminData;
+            if (d.areas) DEMO.areas = d.areas;
+            if (d.locations) DEMO.locations = d.locations;
         } catch(e) {}
     }
     updateTgBadge();
@@ -651,23 +673,50 @@ async function uploadDemo(input, area, locIdx, type) {
     let stageLabel = { before: "施工前", doing: "施工中", after: "施工后" }[type];
     let caption = DEMO.userDisplayName + " | " + area + " - " + locs[locIdx].name + " | " + stageLabel;
 
+    // 显示进度条
+    let progressBar = document.getElementById("uploadProgressBar");
+    let progressFill = document.getElementById("uploadProgressFill");
+    let progressText = document.getElementById("uploadProgressText");
+    progressBar.classList.remove("success","error");
+    progressBar.classList.add("show");
+    progressFill.classList.add("indeterminate");
+    progressText.textContent = "上传中...";
+
     // 先显示本地预览
     rec[type] = URL.createObjectURL(file);
     rec[nameKey] = file.name;
     renderMine();
 
     // 尝试上传到 Telegram
+    let tgUrl = null;
     if (DEMO.tgToken && DEMO.tgChatId) {
-        let tgUrl = await uploadToTelegram(file, caption);
-        if (tgUrl) {
-            rec[type] = tgUrl;
-            renderMine();
+        try {
+            tgUrl = await uploadToTelegram(file, caption);
+            if (tgUrl) {
+                rec[type] = tgUrl;
+                renderMine();
+            }
+        } catch(e) {
+            console.error("TG上传失败:", e);
         }
     }
 
     // 同步到 adminData
     syncToAdminData(area, locs[locIdx].name, viewDate, rec.before, rec.doing, rec.after);
 
+    // 完成进度条
+    progressFill.classList.remove("indeterminate");
+    if (tgUrl) {
+        progressBar.classList.add("success");
+        progressText.textContent = "上传成功";
+    } else if (DEMO.tgToken && DEMO.tgChatId) {
+        progressBar.classList.add("error");
+        progressText.textContent = "上传失败";
+    } else {
+        progressBar.classList.add("success");
+        progressText.textContent = "本地保存成功";
+    }
+    setTimeout(() => progressBar.classList.remove("show"), 2000);
     input.value = "";
 }
 
@@ -691,6 +740,7 @@ function addArea() {
     closeModal("areaModal");
     document.getElementById("newAreaName").value = "";
     renderMine();
+    saveData();
 }
 
 function selectExistingArea() {
@@ -703,11 +753,13 @@ function selectExistingArea() {
     }
     closeModal("selectAreaModal");
     renderMine();
+    saveData();
 }
 
 function addLocation(area) {
     DEMO.locations[area].push({ name: "位置" + (DEMO.locations[area].length + 1), records: [] });
     renderMine();
+    saveData();
 }
 
 function deleteArea(area) {
@@ -719,6 +771,7 @@ function deleteArea(area) {
         DEMO.areas = DEMO.areas.filter(a => a !== area);
         closeModal("confirmModal");
         renderMine();
+        saveData();
     };
     openModal("confirmModal");
 }
@@ -733,6 +786,7 @@ function deleteSingleLoc(area, locIdx) {
         if (locs.length === 0) delete DEMO.locations[area];
         closeModal("confirmModal");
         renderMine();
+        saveData();
     };
     openModal("confirmModal");
 }
