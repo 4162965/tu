@@ -1,6 +1,7 @@
 {
   "areas": [
-    "六祖大道"
+    "六祖大道",
+    "核心区"
   ],
   "locations": {
     "六祖大道": [
@@ -10,11 +11,27 @@
           {
             "date": "2026-05-24",
             "before": "https://1000006.xyz/file/bot8427494834:AAGN47L0zLR_tSNL_ObBse1FbJjUfUAqegQ/photos/file_329.jpg",
-            "doing": "",
-            "after": "",
+            "doing": "https://1000006.xyz/file/bot8427494834:AAGN47L0zLR_tSNL_ObBse1FbJjUfUAqegQ/photos/file_330.jpg",
+            "after": "https://1000006.xyz/file/bot8427494834:AAGN47L0zLR_tSNL_ObBse1FbJjUfUAqegQ/photos/file_331.jpg",
             "bName": "微信图片_20260313221121_84_50.jpg",
-            "dName": "",
-            "aName": ""
+            "dName": "微信图片_20260326203947_101_50.jpg",
+            "aName": "制作SHH的logo.png"
+          }
+        ]
+      }
+    ],
+    "核心区": [
+      {
+        "name": "位置1",
+        "records": [
+          {
+            "date": "2026-05-24",
+            "before": "https://1000006.xyz/file/bot8427494834:AAGN47L0zLR_tSNL_ObBse1FbJjUfUAqegQ/photos/file_332.jpg",
+            "doing": "https://1000006.xyz/file/bot8427494834:AAGN47L0zLR_tSNL_ObBse1FbJjUfUAqegQ/photos/file_335.jpg",
+            "after": "https://1000006.xyz/file/bot8427494834:AAGN47L0zLR_tSNL_ObBse1FbJjUfUAqegQ/photos/file_334.jpg",
+            "bName": "0622158e-08f5-4224-868c-172663d62ca9.png",
+            "dName": "e7687ec2-9014-4fca-891d-a84b973ee973.png",
+            "aName": "airflow-1.png"
           }
         ]
       }
