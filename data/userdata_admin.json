@@ -1,0 +1,42 @@
+{
+  "areas": [
+    "六祖大道",
+    "核心区"
+  ],
+  "locations": {
+    "六祖大道": [
+      {
+        "name": "位置1",
+        "records": [
+          {
+            "date": "2026-05-24",
+            "before": "https://1000006.xyz/file/bot8427494834:AAGN47L0zLR_tSNL_ObBse1FbJjUfUAqegQ/photos/file_317.jpg",
+            "doing": "https://1000006.xyz/file/bot8427494834:AAGN47L0zLR_tSNL_ObBse1FbJjUfUAqegQ/photos/file_299.jpg",
+            "after": "",
+            "bName": "21f5f180-77f2-4813-ab58-625e499987a0.png",
+            "dName": "盘搜.png",
+            "aName": ""
+          }
+        ]
+      },
+      {
+        "name": "位置2",
+        "records": []
+      },
+      {
+        "name": "位置3",
+        "records": []
+      }
+    ],
+    "核心区": [
+      {
+        "name": "位置1",
+        "records": []
+      },
+      {
+        "name": "位置2",
+        "records": []
+      }
+    ]
+  }
+}
