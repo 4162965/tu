@@ -1467,58 +1467,83 @@ function deleteMember() {
 
 // ==================== 管理员删除功能 ====================
 function deleteAdminRecord(user, area, loc, date) {
-    if (!confirm("确定删除「" + user + "」在 " + date + " 于「" + area + " - " + loc + "」的记录吗？\n\n如需删除该位置所有日期的记录，请点击「删除整列」按钮。")) return;
-    
-    // 从 adminData 中删除
-    DEMO.adminData = DEMO.adminData.filter(d =>
-        !(d.user === user && d.area === area && d.loc === loc && d.date === date)
-    );
-    
-    // 从 allUserData 中同步删除该用户的该条记录
-    if (DEMO.allUserData[user] && DEMO.allUserData[user].locations && DEMO.allUserData[user].locations[area]) {
-        let locs = DEMO.allUserData[user].locations[area];
-        locs.forEach(l => {
-            if (l.name === loc && l.records) {
-                l.records = l.records.filter(r => r.date !== date);
-            }
-        });
-    }
-    
-    saveData();
-    // 同步到云端
-    if (syncManager.enabled) {
-        setTimeout(() => syncManager.syncAllUsers().catch(e => console.error("删除记录同步失败:", e)), 200);
-    }
-    // 刷新管理后台视图
-    renderAdmin();
+    document.getElementById("confirmTitle").innerText = "删除记录";
+    document.getElementById("confirmText").innerText = "确定删除「" + user + "」在 " + date + " 于「" + area + " - " + loc + "」的记录吗？";
+    document.getElementById("confirmOkBtn").onclick = function() {
+        DEMO.adminData = DEMO.adminData.filter(d =>
+            !(d.user === user && d.area === area && d.loc === loc && d.date === date)
+        );
+        if (DEMO.allUserData[user] && DEMO.allUserData[user].locations && DEMO.allUserData[user].locations[area]) {
+            let locs = DEMO.allUserData[user].locations[area];
+            locs.forEach(l => {
+                if (l.name === loc && l.records) {
+                    l.records = l.records.filter(r => r.date !== date);
+                }
+            });
+        }
+        closeModal("confirmModal");
+        saveData();
+        if (syncManager.enabled) {
+            setTimeout(() => syncManager.syncAllUsers().catch(e => console.error("删除记录同步失败:", e)), 200);
+        }
+        renderAdmin();
+    };
+    openModal("confirmModal");
 }
 
-// 删除成员某个位置的所有记录（整列）
+// 删除成员某个位置（对标"我的项目"的 deleteSingleLoc）
 function deleteAdminLocation(user, area, loc) {
-    if (!confirm("确定删除「" + user + "」在「" + area + " - " + loc + "」的所有记录吗？\n这将删除该位置所有日期的数据，操作不可恢复。")) return;
-    
-    // 从 adminData 中删除该位置所有记录
-    DEMO.adminData = DEMO.adminData.filter(d =>
-        !(d.user === user && d.area === area && d.loc === loc)
-    );
-    
-    // 从 allUserData 中清空该位置的所有记录
-    if (DEMO.allUserData[user] && DEMO.allUserData[user].locations && DEMO.allUserData[user].locations[area]) {
-        let locs = DEMO.allUserData[user].locations[area];
-        locs.forEach(l => {
-            if (l.name === loc && l.records) {
-                l.records = []; // 清空该位置所有记录
+    document.getElementById("confirmTitle").innerText = "删除位置";
+    document.getElementById("confirmText").innerText = "确定删除「" + user + "」的「" + area + " - " + loc + "」吗？\n该位置的所有影像数据也将被清除。";
+    document.getElementById("confirmOkBtn").onclick = function() {
+        // 从 adminData 中删除该位置所有记录
+        DEMO.adminData = DEMO.adminData.filter(d =>
+            !(d.user === user && d.area === area && d.loc === loc)
+        );
+        // 从 allUserData 中删除该位置
+        if (DEMO.allUserData[user] && DEMO.allUserData[user].locations && DEMO.allUserData[user].locations[area]) {
+            let locs = DEMO.allUserData[user].locations[area];
+            let locIdx = locs.findIndex(l => l.name === loc);
+            if (locIdx !== -1) {
+                locs.splice(locIdx, 1);
+                // 重新编号剩余位置
+                locs.forEach((l, i) => l.name = "位置" + (i + 1));
             }
-        });
-    }
-    
-    saveData();
-    // 同步到云端
-    if (syncManager.enabled) {
-        setTimeout(() => syncManager.syncAllUsers().catch(e => console.error("删除位置记录同步失败:", e)), 200);
-    }
-    // 刷新管理后台视图
-    renderAdmin();
+        }
+        closeModal("confirmModal");
+        saveData();
+        if (syncManager.enabled) {
+            setTimeout(() => syncManager.syncAllUsers().catch(e => console.error("删除位置同步失败:", e)), 200);
+        }
+        renderAdmin();
+    };
+    openModal("confirmModal");
+}
+
+// 删除成员某个区域（对标"我的项目"的 deleteArea）
+function deleteAdminArea(user, area) {
+    document.getElementById("confirmTitle").innerText = "删除区域";
+    document.getElementById("confirmText").innerText = "确定删除「" + user + "」的「" + area + "」区域及所有影像数据？";
+    document.getElementById("confirmOkBtn").onclick = function() {
+        // 从 adminData 中删除该区域所有记录
+        DEMO.adminData = DEMO.adminData.filter(d =>
+            !(d.user === user && d.area === area)
+        );
+        // 从 allUserData 中删除该区域
+        if (DEMO.allUserData[user] && DEMO.allUserData[user].locations) {
+            delete DEMO.allUserData[user].locations[area];
+            if (DEMO.allUserData[user].areas) {
+                DEMO.allUserData[user].areas = DEMO.allUserData[user].areas.filter(a => a !== area);
+            }
+        }
+        closeModal("confirmModal");
+        saveData();
+        if (syncManager.enabled) {
+            setTimeout(() => syncManager.syncAllUsers().catch(e => console.error("删除区域同步失败:", e)), 200);
+        }
+        renderAdmin();
+    };
+    openModal("confirmModal");
 }
 
 function deleteMemberAllData(user) {
@@ -2030,14 +2055,14 @@ function renderAdmin() {
             };
 
             let userCell = isFirstUser ? '<td class="td-user" rowspan="'+userSpans[d.user]+'">'+(DEMO.registeredUsers[d.user] && DEMO.registeredUsers[d.user].displayName || d.user)+'</td>' : '';
-            let areaCell = isFirstArea ? '<td class="td-area" rowspan="'+areaSpans[d.user+"|"+d.area]+'">'+d.area+'</td>' : '';
+            let areaCell = isFirstArea ? '<td class="td-area" rowspan="'+areaSpans[d.user+"|"+d.area]+'">'+d.area+'<br><button onclick=\'deleteAdminArea('+JSON.stringify(d.user)+','+JSON.stringify(d.area)+')\' style="margin-top:4px;padding:1px 5px;background:#c0392b;color:#fff;border:none;border-radius:2px;cursor:pointer;font-size:9px" title="删除该区域所有数据">删除区域</button></td>' : '';
 
             desktopRows += '<tr>' + userCell + areaCell +
-                '<td class="td-loc">'+d.loc+'</td>' +
+                '<td class="td-loc">'+d.loc+'<br><button onclick=\'deleteAdminLocation('+JSON.stringify(d.user)+','+JSON.stringify(d.area)+','+JSON.stringify(d.loc)+')\' style="margin-top:2px;padding:1px 5px;background:#e67e22;color:#fff;border:none;border-radius:2px;cursor:pointer;font-size:9px" title="删除该位置所有数据">删除位置</button></td>' +
                 makeThumb(d.before, true) +
                 makeThumb(d.doing, false) +
                 makeThumb(d.after, false) +
-                '<td style="text-align:center;width:80px"><button onclick="deleteAdminRecord('+JSON.stringify(d.user)+','+JSON.stringify(d.area)+','+JSON.stringify(d.loc)+','+JSON.stringify(d.date)+')" style="padding:2px 6px;background:#e74c3c;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:10px">删除</button> <button onclick="deleteAdminLocation('+JSON.stringify(d.user)+','+JSON.stringify(d.area)+','+JSON.stringify(d.loc)+')" style="padding:2px 6px;background:#c0392b;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:9px" title="删除该位置所有日期记录">整列</button></td></tr>';
+                '<td style="text-align:center;width:60px"><button onclick=\'deleteAdminRecord('+JSON.stringify(d.user)+','+JSON.stringify(d.area)+','+JSON.stringify(d.loc)+','+JSON.stringify(d.date)+')\' style="padding:2px 6px;background:#e74c3c;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:10px">删除</button></td></tr>';
         });
 
         let mobileCards = "";
@@ -2056,9 +2081,10 @@ function renderAdmin() {
                         '<div class="admin-mb-col"><span class="admin-mb-label">施工中</span>'+ (d.doing ? '<img src="'+d.doing+'" onclick="window.open(\''+d.doing+'\')">' : '<span class="admin-mb-no">—</span>') +'</div>' +
                         '<div class="admin-mb-col"><span class="admin-mb-label">施工后</span>'+ (d.after ? '<img src="'+d.after+'" onclick="window.open(\''+d.after+'\')">' : '<span class="admin-mb-no">—</span>') +'</div>' +
                     '</div>' +
-                    '<div style="text-align:right;margin-top:6px">' +
-                        '<button onclick="deleteAdminRecord('+JSON.stringify(d.user)+','+JSON.stringify(d.area)+','+JSON.stringify(d.loc)+','+JSON.stringify(d.date)+')" style="padding:2px 8px;background:#e74c3c;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px">删除此条</button>' +
-                    ' <button onclick="deleteAdminLocation('+JSON.stringify(d.user)+','+JSON.stringify(d.area)+','+JSON.stringify(d.loc)+')" style="padding:2px 8px;background:#c0392b;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px" title="删除该位置所有日期记录">删除整列</button>' +
+                    '<div style="text-align:right;margin-top:6px;display:flex;gap:4px;justify-content:flex-end;flex-wrap:wrap">' +
+                        '<button onclick=\'deleteAdminRecord('+JSON.stringify(d.user)+','+JSON.stringify(d.area)+','+JSON.stringify(d.loc)+','+JSON.stringify(d.date)+')\' style="padding:2px 8px;background:#e74c3c;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px">删除此条</button>' +
+                    ' <button onclick=\'deleteAdminLocation('+JSON.stringify(d.user)+','+JSON.stringify(d.area)+','+JSON.stringify(d.loc)+')\' style="padding:2px 8px;background:#e67e22;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px">删除位置</button>' +
+                    ' <button onclick=\'deleteAdminArea('+JSON.stringify(d.user)+','+JSON.stringify(d.area)+')\' style="padding:2px 8px;background:#c0392b;color:#fff;border:none;border-radius:3px;cursor:pointer;font-size:11px">删除区域</button>' +
                     '</div></div>';
         });
 
