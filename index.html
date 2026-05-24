@@ -259,7 +259,8 @@ body{background:#f0f2f5;min-height:100vh;overflow-x:hidden;-webkit-text-size-adj
             <div class="login-card" id="registerCard" style="display:none">
                 <div class="login-sysname">账户注册</div>
                 <div class="login-subtitle">注册新账号以使用影像归档系统</div>
-                <div class="form-group"><label>用户名</label><input type="text" class="form-input" id="regPageUser" placeholder="请输入用户名"></div>
+                <div class="form-group"><label>用户名</label><input type="text" class="form-input" id="regPageUser" placeholder="请输入用户名（用于登录）"></div>
+                <div class="form-group"><label>真实姓名</label><input type="text" class="form-input" id="regPageName" placeholder="请输入真实姓名（用于显示）"></div>
                 <div class="form-group"><label>密码</label><input type="password" class="form-input" id="regPagePwd" placeholder="请输入密码（至少4位）"></div>
                 <div class="form-group"><label>确认密码</label><input type="password" class="form-input" id="regPagePwd2" placeholder="请再次输入密码"></div>
                 <button class="btn-register-submit" onclick="doRegisterFromPage()">注 册</button>
@@ -440,7 +441,8 @@ body{background:#f0f2f5;min-height:100vh;overflow-x:hidden;-webkit-text-size-adj
     <div class="modal-box">
         <h4>编辑成员信息</h4>
         <div class="form-hint" id="editMemberHint"></div>
-        <div class="form-group"><label>用户名</label><input type="text" class="form-input" id="editMemberUser" placeholder="请输入用户名"></div>
+        <div class="form-group"><label>用户名（登录账号）</label><input type="text" class="form-input" id="editMemberUser" placeholder="请输入用户名"></div>
+        <div class="form-group"><label>真实姓名（显示名）</label><input type="text" class="form-input" id="editMemberName" placeholder="请输入真实姓名"></div>
         <div class="form-group"><label>新密码（留空则不修改）</label><input type="password" class="form-input" id="editMemberPwd" placeholder="留空保持原密码"></div>
         <div class="modal-actions">
             <button class="btn-cancel" onclick="closeModal('editMemberModal')">取消</button>
@@ -1156,7 +1158,7 @@ function doLoginFromPage() {
         }
         DEMO.currentUser = "admin";
         DEMO.isSuperAdmin = true;
-        DEMO.userDisplayName = "超级管理员";
+        DEMO.userDisplayName = "管理员";
         DEMO.userJoinDate = "2026-05-24";
     } else {
         // 普通用户：必须在注册表中且密码匹配
@@ -1170,7 +1172,7 @@ function doLoginFromPage() {
         }
         DEMO.currentUser = loginUser;
         DEMO.isSuperAdmin = false;
-        DEMO.userDisplayName = DEMO.registeredUsers[loginUser].name;
+        DEMO.userDisplayName = DEMO.registeredUsers[loginUser].displayName || DEMO.registeredUsers[loginUser].name;
         DEMO.userJoinDate = "2026-05-24";
     }
 
@@ -1198,6 +1200,7 @@ function doLoginFromPage() {
 
 function doRegisterFromPage() {
     let regUser = document.getElementById("regPageUser").value.trim();
+    let regName = document.getElementById("regPageName").value.trim();
     let regPwd = document.getElementById("regPagePwd").value;
     let regPwd2 = document.getElementById("regPagePwd2").value;
     let msgEl = document.getElementById("registerPageMsg");
@@ -1214,6 +1217,9 @@ function doRegisterFromPage() {
         msgEl.innerText = "该用户名已注册，请直接登录";
         return;
     }
+    if (!regName) {
+        regName = regUser;
+    }
     if (!regPwd) {
         msgEl.innerText = "请输入密码";
         return;
@@ -1227,7 +1233,7 @@ function doRegisterFromPage() {
         return;
     }
 
-    DEMO.registeredUsers[regUser] = { pwd: regPwd, name: regUser };
+    DEMO.registeredUsers[regUser] = { pwd: regPwd, name: regUser, displayName: regName };
     saveData();
     // 同步注册用户到云端
     if (syncManager.enabled) {
@@ -1239,6 +1245,7 @@ function doRegisterFromPage() {
         document.getElementById("loginPageUser").value = regUser;
         document.getElementById("loginPagePwd").value = "";
         document.getElementById("regPageUser").value = "";
+        document.getElementById("regPageName").value = "";
         document.getElementById("regPagePwd").value = "";
         document.getElementById("regPagePwd2").value = "";
     }, 1500);
@@ -1249,6 +1256,7 @@ function switchToRegister() {
     document.getElementById("registerCard").style.display = "block";
     document.getElementById("loginPageMsg").innerText = "";
     document.getElementById("registerPageMsg").innerText = "";
+    document.getElementById("regPageName").value = "";
 }
 
 function switchToLogin() {
@@ -1292,7 +1300,7 @@ function saveName() {
     DEMO.userDisplayName = newName;
     // 更新注册表中的姓名
     if (DEMO.registeredUsers[DEMO.currentUser]) {
-        DEMO.registeredUsers[DEMO.currentUser].name = newName;
+        DEMO.registeredUsers[DEMO.currentUser].displayName = newName;
     }
     saveData();
     document.getElementById("myName").innerText = newName;
@@ -1354,13 +1362,13 @@ function renderMemberMgmtList() {
         '</tr></thead><tbody>';
     
     users.forEach(u => {
-        let name = DEMO.registeredUsers[u].name || u;
+        let dName = DEMO.registeredUsers[u].displayName || DEMO.registeredUsers[u].name || u;
         html += '<tr>' +
             '<td style="padding:4px 6px;border:1px solid #e0e0e0">' + u + '</td>' +
-            '<td style="padding:4px 6px;border:1px solid #e0e0e0;color:#555">' + name + '</td>' +
+            '<td style="padding:4px 6px;border:1px solid #e0e0e0;color:#555">' + dName + '</td>' +
             '<td style="text-align:center;padding:4px 6px;border:1px solid #e0e0e0">' +
                 '<button onclick="editMember(\'' + u + '\')" style="padding:3px 6px;border:none;border-radius:3px;cursor:pointer;font-size:10px;background:#f0f5ff;color:#2980b9;margin-right:4px">编辑</button>' +
-                '<button onclick="deleteMemberAllData(\'' + u + '\')" style="padding:3px 6px;border:none;border-radius:3px;cursor:pointer;font-size:10px;background:#ffeaea;color:#e74c3c">删除数据</button>' +
+                '<button onclick="deleteMemberAllData(\'' + u + '\')" style="padding:3px 6px;border:none;border-radius:3px;cursor:pointer;font-size:10px;background:#ffeaea;color:#e74c3c">删除成员</button>' +
             '</td></tr>';
     });
     
@@ -1370,19 +1378,23 @@ function renderMemberMgmtList() {
 
 function editMember(oldUser) {
     editingMemberOldUser = oldUser;
+    let dName = DEMO.registeredUsers[oldUser].displayName || DEMO.registeredUsers[oldUser].name || oldUser;
     document.getElementById("editMemberHint").innerText =
-        "当前成员：" + oldUser + "（显示名：" + (DEMO.registeredUsers[oldUser].name || oldUser) + "）";
+        "当前成员：" + oldUser + "（显示名：" + dName + "）";
     document.getElementById("editMemberUser").value = oldUser;
+    document.getElementById("editMemberName").value = dName;
     document.getElementById("editMemberPwd").value = "";
     openModal("editMemberModal");
 }
 
 function saveMember() {
     let newUser = document.getElementById("editMemberUser").value.trim();
+    let newName = document.getElementById("editMemberName").value.trim();
     let newPwd = document.getElementById("editMemberPwd").value;
     let oldUser = editingMemberOldUser;
     
     if (!newUser) return alert("请输入用户名");
+    if (!newName) newName = newUser;
     
     // 如果用户名变更，检查是否冲突
     if (newUser !== oldUser) {
@@ -1393,12 +1405,13 @@ function saveMember() {
     // 获取原有数据
     let oldData = DEMO.registeredUsers[oldUser];
     let newPwdFinal = newPwd || oldData.pwd;
+    let displayName = newName || oldData.displayName || oldData.name || newUser;
     
     // 更新 registeredUsers
     if (newUser !== oldUser) {
         delete DEMO.registeredUsers[oldUser];
     }
-    DEMO.registeredUsers[newUser] = { pwd: newPwdFinal, name: newUser };
+    DEMO.registeredUsers[newUser] = { pwd: newPwdFinal, name: newUser, displayName: displayName };
     
     // 更新 allUserData
     if (newUser !== oldUser && DEMO.allUserData[oldUser]) {
@@ -1418,6 +1431,7 @@ function saveMember() {
     }
     closeModal("editMemberModal");
     document.getElementById("editMemberUser").value = "";
+    document.getElementById("editMemberName").value = "";
     document.getElementById("editMemberPwd").value = "";
     editingMemberOldUser = "";
     renderMemberMgmtList();
@@ -1482,15 +1496,17 @@ function deleteAdminRecord(user, area, loc, date) {
 }
 
 function deleteMemberAllData(user) {
-    if (!confirm("确定删除成员「" + user + "」的所有影像数据吗？\n该操作不可撤销！")) return;
+    if (!confirm("确定删除成员「" + user + "」吗？\n该成员的所有影像数据也将被清除。")) return;
+    
+    // 从 registeredUsers 中删除账号
+    delete DEMO.registeredUsers[user];
     
     // 从 adminData 中删除该成员所有数据
     DEMO.adminData = DEMO.adminData.filter(d => d.user !== user);
     
     // 清空 allUserData 中该成员的数据
     if (DEMO.allUserData[user]) {
-        DEMO.allUserData[user].areas = [];
-        DEMO.allUserData[user].locations = {};
+        delete DEMO.allUserData[user];
     }
     
     saveData();
@@ -1498,13 +1514,13 @@ function deleteMemberAllData(user) {
     if (syncManager.enabled) {
         setTimeout(() => syncManager.syncAllUsers().catch(e => console.error("删除成员数据同步失败:", e)), 200);
     }
-    // 刷新管理后台
+    // 刷新管理后台和成员列表
     renderAdmin();
     renderMemberMgmtList();
 }
 
 // ==================== 水印合成 ====================
-async function addWatermark(imageFile, areaName, locName) {
+async function addWatermark(imageFile, areaName, locName, userName) {
     return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = function() {
@@ -1546,6 +1562,7 @@ async function addWatermark(imageFile, areaName, locName) {
             const areaFont = `bold ${Math.max(14, img.width * 0.02)}px "Microsoft YaHei", "PingFang SC", sans-serif`;
             const timeFont = `bold ${Math.max(28, img.width * 0.04)}px "Microsoft YaHei", "PingFang SC", sans-serif`;
             const dateFont = `${Math.max(12, img.width * 0.015)}px "Microsoft YaHei", "PingFang SC", sans-serif`;
+            const userFont = `bold ${Math.max(16, img.width * 0.025)}px "Microsoft YaHei", "PingFang SC", sans-serif`;
             
             // 测量文本尺寸
             ctx.font = areaFont;
@@ -1554,26 +1571,42 @@ async function addWatermark(imageFile, areaName, locName) {
             const timeMetrics = ctx.measureText(timeStr);
             ctx.font = dateFont;
             const dateMetrics = ctx.measureText(dateStr);
+            ctx.font = userFont;
+            const userMetrics = ctx.measureText(userName);
             
             // 确定各部分宽度
             const areaWidth = areaMetrics.width + padding * 2;
             const timeWidth = timeMetrics.width + padding * 2;
             const dateWidth = dateMetrics.width + padding * 2;
-            const maxWidth = Math.max(areaWidth, timeWidth, dateWidth, watermarkWidth);
+            const userWidth = userMetrics.width + padding * 2;
+            const maxWidth = Math.max(areaWidth, timeWidth, dateWidth, userWidth, watermarkWidth);
             
             // 计算各部分高度
             const areaHeight = Math.max(24, img.height * 0.03);
             const timeHeight = Math.max(40, img.height * 0.05);
             const dateHeight = Math.max(18, img.height * 0.02);
-            const totalHeight = areaHeight + timeHeight + dateHeight;
+            const userHeight = Math.max(28, img.height * 0.035);
+            const totalHeight = userHeight + areaHeight + timeHeight + dateHeight;
             
             // 绘制水印背景（半透明黑色，增强可读性）
             ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-            ctx.fillRect(watermarkX - padding, watermarkY - totalHeight - padding * 3, 
-                        maxWidth, totalHeight + padding * 3);
+            ctx.fillRect(watermarkX - padding, watermarkY - totalHeight - padding * 4, 
+                        maxWidth, totalHeight + padding * 4);
+            
+            // 绘制用户姓名（橙底白字）
+            const userY = watermarkY - totalHeight;
+            ctx.fillStyle = '#e67e22';
+            roundRect(ctx, watermarkX, userY, maxWidth, userHeight, 6);
+            ctx.fill();
+            
+            ctx.fillStyle = '#ffffff';
+            ctx.font = userFont;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(userName, watermarkX + maxWidth / 2, userY + userHeight / 2);
             
             // 绘制区域标签（蓝底白字圆角矩形）
-            const areaY = watermarkY - totalHeight;
+            const areaY = userY + userHeight;
             ctx.fillStyle = '#2980b9';
             roundRect(ctx, watermarkX, areaY, maxWidth, areaHeight, 6);
             ctx.fill();
@@ -1695,7 +1728,7 @@ async function uploadDemo(input, area, locIdx, type) {
     let watermarkBlob = null;
     try {
         let locName = locs[locIdx].name;
-        watermarkBlob = await addWatermark(file, area, locName);
+        watermarkBlob = await addWatermark(file, area, locName, DEMO.userDisplayName || DEMO.currentUser);
     } catch(e) {
         console.error("水印合成失败:", e);
         watermarkBlob = file; // 降级使用原图
@@ -1990,7 +2023,7 @@ function renderAdmin() {
                 return '<td class="'+cls+'"><span class="admin-no-img">—</span></td>';
             };
 
-            let userCell = isFirstUser ? '<td class="td-user" rowspan="'+userSpans[d.user]+'">'+d.user+'</td>' : '';
+            let userCell = isFirstUser ? '<td class="td-user" rowspan="'+userSpans[d.user]+'">'+(DEMO.registeredUsers[d.user] && DEMO.registeredUsers[d.user].displayName || d.user)+'</td>' : '';
             let areaCell = isFirstArea ? '<td class="td-area" rowspan="'+areaSpans[d.user+"|"+d.area]+'">'+d.area+'</td>' : '';
 
             desktopRows += '<tr>' + userCell + areaCell +
@@ -2010,7 +2043,7 @@ function renderAdmin() {
             });
             mobileCards +=
                 '<div class="admin-mb">' +
-                    '<div class="admin-mb-user">'+d.user+'</div>' +
+                    '<div class="admin-mb-user">'+(DEMO.registeredUsers[d.user] && DEMO.registeredUsers[d.user].displayName || d.user)+'</div>' +
                     '<div class="admin-mb-meta">'+d.area+' · '+d.loc+'</div>' +
                     '<div class="admin-mb-imgs">' +
                         '<div class="admin-mb-col"><span class="admin-mb-label">施工前</span>'+ (d.before ? '<img src="'+d.before+'" onclick="window.open(\''+d.before+'\')">' : '<span class="admin-mb-no">—</span>') +'</div>' +
