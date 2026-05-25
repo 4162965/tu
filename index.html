@@ -908,7 +908,7 @@ function doLoginFromPage() {
     if (syncManager.enabled) {
         msgEl.innerText = "正在同步云端数据...";
         msgEl.style.color = "#2980b9";
-        syncManager.syncFromCloud().then((ok) => {
+        syncManager.syncFromCloud(true).then((ok) => {
             if (ok) {
                 loadCurrentUserData();
                 msgEl.innerText = "";
@@ -2139,7 +2139,7 @@ window.onload = function() {
         let raw = localStorage.getItem("gc_cm_data");
         if (!raw || raw.length <= 2) {
             console.log("[preload] 本地无数据，后台预拉取 D1...");
-            syncManager.syncFromCloud().then(ok => {
+            syncManager.syncFromCloud(true).then(ok => {
                 console.log("[preload] 预拉取完成:", ok);
                 if (ok) loadData();
             }).catch(e => console.error("[preload] 预拉取失败:", e));
