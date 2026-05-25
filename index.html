@@ -29,7 +29,8 @@ body{background:#f0f2f5;min-height:100vh;overflow-x:hidden;-webkit-text-size-adj
 .login-page .login-container{display:flex;align-items:center;justify-content:center;min-height:100%;padding:20px 16px}
 .login-card{background:#fff;border-radius:12px;padding:28px 24px;width:100%;max-width:340px;box-shadow:0 8px 32px rgba(0,0,0,0.12);border:1px solid #e0e0e0;margin:0 auto}
 .login-sysname{text-align:center;font-size:18px;font-weight:700;color:#1a1a1a;margin-bottom:6px;letter-spacing:0.5px}
-.login-subtitle{text-align:center;font-size:12px;color:#888;margin-bottom:24px}
+.login-subtitle{text-align:center;font-size:12px;color:#888;margin-bottom:6px}
+.login-version{text-align:center;font-size:11px;color:#bbb;margin-bottom:24px;letter-spacing:0.5px}
 .login-card .form-group{margin-bottom:12px}
 .login-card .form-group label{display:block;font-size:11px;color:#555;margin-bottom:4px;font-weight:600}
 .login-card .form-input{width:100%;padding:10px 12px;border:1px solid #d0d0d0;border-radius:6px;font-size:13px;outline:none;transition:border-color .2s;background:#f8f9fa;appearance:none;-webkit-appearance:none}
@@ -250,6 +251,7 @@ body{background:#f0f2f5;min-height:100vh;overflow-x:hidden;-webkit-text-size-adj
             <div class="login-card" id="loginCard">
                 <div class="login-sysname">项目图片整理系统</div>
                 <div class="login-subtitle">登录以查看和管理项目图片</div>
+                <div class="login-version" id="loginVersion"></div>
                 <div class="form-group"><label>用户名</label><input type="text" class="form-input" id="loginPageUser" placeholder="请输入用户名"></div>
                 <div class="form-group"><label>密码</label><input type="password" class="form-input" id="loginPagePwd" placeholder="请输入密码"></div>
                 <button class="btn-login-submit" onclick="doLoginFromPage()">登 录</button>
@@ -475,6 +477,7 @@ body{background:#f0f2f5;min-height:100vh;overflow-x:hidden;-webkit-text-size-adj
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script>
 // ==================== 全局数据 ====================
+const APP_VERSION = "v2.1-1010";  // 版本标识：D1同步 + 跨平台强制拉取
 const DEMO = {
     currentUser: null,
     isSuperAdmin: false,
@@ -526,10 +529,10 @@ const syncManager = {
     },
 
     // 从云端拉取全部数据（仅当本地无数据时恢复，否则以本地为准并上传）
-    syncFromCloud: async function() {
+    syncFromCloud: async function(force) {
         if (!this.enabled) return false;
         try {
-            console.log("[sync] 正在从 D1 拉取数据:", this.baseUrl + "/get?key=full_data");
+            console.log("[sync] 正在从 D1 拉取数据:", this.baseUrl + "/get?key=full_data", force ? "(强制)" : "");
             let resp = await fetch(this.baseUrl + "/get?key=full_data");
             console.log("[sync] D1 响应状态:", resp.status, resp.ok);
             if (!resp.ok) return false;
@@ -537,12 +540,10 @@ const syncManager = {
             console.log("[sync] D1 返回数据大小:", JSON.stringify(result).length, "chars");
             if (result.value) {
                 let d = result.value;
-                // 检查本地是否有数据
                 let raw = localStorage.getItem("gc_cm_data");
                 let hasLocalData = raw && raw.length > 2;
                 
-                if (!hasLocalData) {
-                    // 本地无数据，用云端恢复
+                if (force || !hasLocalData) {
                     if (d.registeredUsers) DEMO.registeredUsers = d.registeredUsers;
                     if (d.allUserData) DEMO.allUserData = d.allUserData;
                     if (d.tgToken) DEMO.tgToken = d.tgToken;
@@ -552,7 +553,7 @@ const syncManager = {
                     saveDataToLocal();
                     console.log("[sync] 已从 D1 恢复数据到本地 localStorage");
                 } else {
-                    console.log("[sync] 本地已有数据，跳过云端覆盖");
+                    console.log("[sync] 本地已有数据且非强制模式，跳过云端覆盖");
                 }
                 this.lastSyncTime = Date.now();
                 this.saveConfig();
@@ -1005,7 +1006,7 @@ async function recoverFromLoginToken() {
     let msg = document.getElementById("loginGithubMsg");
     msg.style.color = "#2980b9"; msg.innerText = "正在从云端拉取数据...";
     try {
-        let success = await syncManager.syncFromCloud();
+        let success = await syncManager.syncFromCloud(true);
         if (success) {
             syncManager.enabled = true;
             syncManager.saveConfig();
@@ -2119,6 +2120,11 @@ function initLoginEnterKey() {
 }
 
 window.onload = function() {
+    console.log("========================================");
+    console.log("  版本:", APP_VERSION);
+    console.log("  后端:", syncManager.baseUrl);
+    console.log("========================================");
+    document.getElementById("loginVersion").textContent = APP_VERSION;
     document.getElementById("viewDate").value = todayStr();
     document.getElementById("adminDateFrom").value = todayStr();
     document.getElementById("adminDateTo").value = todayStr();
@@ -2154,7 +2160,7 @@ window.onload = function() {
     setInterval(function() {
         if (syncManager.enabled && DEMO.currentUser) {
             console.log("定期云端同步...");
-            syncManager.syncFromCloud().catch(e => console.error("定期同步失败:", e));
+            syncManager.syncFromCloud(true).catch(e => console.error("定期同步失败:", e));
         }
     }, 30000);
     
