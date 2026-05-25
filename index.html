@@ -221,14 +221,14 @@ body{background:#f0f2f5;min-height:100vh;overflow-x:hidden;-webkit-text-size-adj
 <body>
 <div class="toolbar">
     <div class="toolbar-left">
-        <div class="toolbar-title">项目施工影像归档系统</div>
+        <div class="toolbar-title">项目图片整理系统</div>
         <div class="toolbar-nav">
             <button class="active" id="navMine" onclick="switchPage('mine')">我的项目</button>
             <button id="navAdmin" style="display:none" onclick="switchPage('admin')">管理后台</button>
         </div>
     </div>
     <div class="toolbar-right">
-        <span class="sync-badge" id="syncBadge" onclick="openModal('syncConfigModal')" title="云同步状态">☁ 未配置</span>
+        <span class="sync-badge" id="syncBadge" onclick="openModal('syncConfigModal')" title="云同步状态" style="display:none"></span>
         <div class="toolbar-user">当前用户：<span id="toolbarUser">未登录</span></div>
         <button class="btn-sm btn-login" id="btnLogin" onclick="showLoginPage()">登录</button>
         <button class="btn-sm btn-register" id="btnRegister" onclick="showLoginPage();setTimeout(function(){switchToRegister();},100)">注册</button>
@@ -248,12 +248,13 @@ body{background:#f0f2f5;min-height:100vh;overflow-x:hidden;-webkit-text-size-adj
     <div class="page login-page active" id="page-login">
         <div class="login-container">
             <div class="login-card" id="loginCard">
-                <div class="login-sysname">项目施工影像归档系统</div>
-                <div class="login-subtitle">登录以查看和管理施工影像</div>
+                <div class="login-sysname">项目图片整理系统</div>
+                <div class="login-subtitle">登录以查看和管理项目图片</div>
                 <div class="form-group"><label>用户名</label><input type="text" class="form-input" id="loginPageUser" placeholder="请输入用户名"></div>
                 <div class="form-group"><label>密码</label><input type="password" class="form-input" id="loginPagePwd" placeholder="请输入密码"></div>
                 <button class="btn-login-submit" onclick="doLoginFromPage()">登 录</button>
                 <div class="login-msg" id="loginPageMsg"></div>
+
                 <div class="login-switch">没有账号？<a onclick="switchToRegister()">注册</a></div>
             </div>
             <div class="login-card" id="registerCard" style="display:none">
@@ -547,8 +548,8 @@ const syncManager = {
                 console.error("同步配置解析失败:", e);
             }
         } else {
-            this.enabled = false;
-            this.token = "";
+            this.enabled = true;
+            this.token = "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";
             this.owner = "4162965";
             this.repo = "tu";
             this.branch = "main";
@@ -654,40 +655,26 @@ const syncManager = {
         this.updateBadge();
     },
     
-    // 更新状态徽章
+    // 更新状态徽章（自动同步模式下不显示徽章）
     updateBadge: function() {
         let badge = document.getElementById("syncBadge");
         if (!badge) return;
         
         if (!this.enabled) {
-            badge.className = "sync-badge";
-            badge.innerText = "☁ 未配置";
-            badge.style.display = "inline-block";
+            badge.style.display = "none";
             return;
         }
-        
         if (!this.token || !this.owner || !this.repo) {
-            badge.className = "sync-badge error";
-            badge.innerText = "☁ 配置不全";
-            badge.style.display = "inline-block";
+            badge.style.display = "none";
             return;
         }
         
-        // 根据最后同步时间显示状态
+        // 仅更新最后同步时间，不显示徽章
         let now = Date.now();
         let timeDiff = now - this.lastSyncTime;
-        
-        if (timeDiff < 60000) { // 1分钟内
-            badge.className = "sync-badge synced";
-            badge.innerText = "☁ 已同步";
-        } else if (timeDiff < 300000) { // 5分钟内
-            badge.className = "sync-badge syncing";
-            badge.innerText = "☁ 同步中";
-        } else {
-            badge.className = "sync-badge error";
-            badge.innerText = "☁ 需同步";
+        if (timeDiff >= 60000) {
+            console.log("云同步状态: " + (timeDiff < 300000 ? "同步中" : "需同步"));
         }
-        badge.style.display = "inline-block";
     },
     
     // 获取用户数据文件名
@@ -816,7 +803,183 @@ const syncManager = {
         return false;
     },
     
-    // 同步所有用户数据
+    // 同步所有数据（包括用户数据、注册用户表、TG配置、管理员数据）
+    syncAllData: async function() {
+        if (!this.enabled) return false;
+        
+        let success = true;
+        
+        // 1. 同步所有用户数据
+        for (let username in DEMO.allUserData) {
+            let userData = DEMO.allUserData[username];
+            if (!await this.uploadUserData(username, userData)) {
+                success = false;
+            }
+        }
+        
+        // 2. 同步注册用户表
+        if (success) {
+            let regUsersData = { registeredUsers: DEMO.registeredUsers };
+            let regUsersPath = `${this.basePath}/registered_users.json`;
+            try {
+                let content = JSON.stringify(regUsersData, null, 2);
+                let base64Content = btoa(unescape(encodeURIComponent(content)));
+                
+                // 先获取文件SHA（如果存在）
+                let sha = null;
+                try {
+                    let getResp = await fetch(`https://api.github.com/repos/${this.owner}/${this.repo}/contents/${regUsersPath}?ref=${this.branch}`, {
+                        headers: {
+                            "Authorization": `Bearer ${this.token}`,
+                            "Accept": "application/vnd.github.v3+json"
+                        }
+                    });
+                    if (getResp.ok) {
+                        let fileInfo = await getResp.json();
+                        sha = fileInfo.sha;
+                    }
+                } catch(e) {}
+                
+                let body = {
+                    message: "Update registered users",
+                    content: base64Content,
+                    branch: this.branch
+                };
+                if (sha) body.sha = sha;
+                
+                let resp = await fetch(`https://api.github.com/repos/${this.owner}/${this.repo}/contents/${regUsersPath}`, {
+                    method: "PUT",
+                    headers: {
+                        "Authorization": `Bearer ${this.token}`,
+                        "Accept": "application/vnd.github.v3+json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(body)
+                });
+                
+                if (resp.ok) {
+                    this.lastSyncTime = Date.now();
+                    this.saveConfig();
+                    console.log("注册用户表同步成功");
+                } else {
+                    success = false;
+                }
+            } catch(e) {
+                console.error("注册用户表同步异常:", e);
+                success = false;
+            }
+        }
+        
+        // 3. 同步TG配置
+        if (success) {
+            let tgConfigData = { 
+                tgToken: DEMO.tgToken,
+                tgChatId: DEMO.tgChatId,
+                tgProxy: DEMO.tgProxy
+            };
+            let tgConfigPath = `${this.basePath}/tg_config.json`;
+            try {
+                let content = JSON.stringify(tgConfigData, null, 2);
+                let base64Content = btoa(unescape(encodeURIComponent(content)));
+                
+                // 先获取文件SHA（如果存在）
+                let sha = null;
+                try {
+                    let getResp = await fetch(`https://api.github.com/repos/${this.owner}/${this.repo}/contents/${tgConfigPath}?ref=${this.branch}`, {
+                        headers: {
+                            "Authorization": `Bearer ${this.token}`,
+                            "Accept": "application/vnd.github.v3+json"
+                        }
+                    });
+                    if (getResp.ok) {
+                        let fileInfo = await getResp.json();
+                        sha = fileInfo.sha;
+                    }
+                } catch(e) {}
+                
+                let body = {
+                    message: "Update TG config",
+                    content: base64Content,
+                    branch: this.branch
+                };
+                if (sha) body.sha = sha;
+                
+                let resp = await fetch(`https://api.github.com/repos/${this.owner}/${this.repo}/contents/${tgConfigPath}`, {
+                    method: "PUT",
+                    headers: {
+                        "Authorization": `Bearer ${this.token}`,
+                        "Accept": "application/vnd.github.v3+json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(body)
+                });
+                
+                if (resp.ok) {
+                    console.log("TG配置同步成功");
+                } else {
+                    success = false;
+                }
+            } catch(e) {
+                console.error("TG配置同步异常:", e);
+                success = false;
+            }
+        }
+        
+        // 4. 同步管理员数据
+        if (success) {
+            let adminDataPath = `${this.basePath}/admin_data.json`;
+            try {
+                let content = JSON.stringify(DEMO.adminData, null, 2);
+                let base64Content = btoa(unescape(encodeURIComponent(content)));
+                
+                // 先获取文件SHA（如果存在）
+                let sha = null;
+                try {
+                    let getResp = await fetch(`https://api.github.com/repos/${this.owner}/${this.repo}/contents/${adminDataPath}?ref=${this.branch}`, {
+                        headers: {
+                            "Authorization": `Bearer ${this.token}`,
+                            "Accept": "application/vnd.github.v3+json"
+                        }
+                    });
+                    if (getResp.ok) {
+                        let fileInfo = await getResp.json();
+                        sha = fileInfo.sha;
+                    }
+                } catch(e) {}
+                
+                let body = {
+                    message: "Update admin data",
+                    content: base64Content,
+                    branch: this.branch
+                };
+                if (sha) body.sha = sha;
+                
+                let resp = await fetch(`https://api.github.com/repos/${this.owner}/${this.repo}/contents/${adminDataPath}`, {
+                    method: "PUT",
+                    headers: {
+                        "Authorization": `Bearer ${this.token}`,
+                        "Accept": "application/vnd.github.v3+json",
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(body)
+                });
+                
+                if (resp.ok) {
+                    console.log("管理员数据同步成功");
+                } else {
+                    success = false;
+                }
+            } catch(e) {
+                console.error("管理员数据同步异常:", e);
+                success = false;
+            }
+        }
+        
+        this.updateBadge();
+        return success;
+    },
+    
+    // 同步所有用户数据（兼容旧版本）
     syncAllUsers: async function() {
         if (!this.enabled) return false;
         
@@ -959,11 +1122,12 @@ function saveData() {
         adminData: DEMO.adminData 
     })); 
     
-    // 如果同步已启用，异步上传到云端
-    if (syncManager.enabled && DEMO.currentUser) {
+    // 如果同步已启用，异步上传所有数据到云端（不仅仅是当前用户）
+    if (syncManager.enabled) {
         setTimeout(async () => {
             try {
-                await syncManager.syncCurrentUser();
+                await syncManager.syncAllData();
+                console.log("数据已自动同步到云端");
             } catch(e) {
                 console.error("自动同步失败:", e);
             }
@@ -1203,7 +1367,7 @@ function showMainApp() {
     }
     
     // 云同步按钮仅管理员可见
-    document.getElementById("syncBadge").style.display = DEMO.isSuperAdmin ? "" : "none";
+    document.getElementById("syncBadge").style.display = "none";
     let mineSyncBtn = document.getElementById("btnMineSync");
     if (mineSyncBtn) mineSyncBtn.style.display = DEMO.isSuperAdmin ? "" : "none";
 
@@ -1280,7 +1444,23 @@ function doLoginFromPage() {
             showMainApp();
         });
     } else {
-        showMainApp();
+        // 普通用户登录也自动同步云端数据
+        if (syncManager.enabled) {
+            msgEl.innerText = "正在同步云端数据...";
+            msgEl.style.color = "#2980b9";
+            syncManager.syncFromCloud().then(() => {
+                loadCurrentUserData();
+                msgEl.innerText = "";
+                msgEl.style.color = "#e74c3c";
+                showMainApp();
+            }).catch(() => {
+                msgEl.innerText = "";
+                msgEl.style.color = "#e74c3c";
+                showMainApp();
+            });
+        } else {
+            showMainApp();
+        }
     }
 }
 
@@ -1350,6 +1530,44 @@ function switchToLogin() {
     document.getElementById("loginCard").style.display = "block";
     document.getElementById("loginPageMsg").innerText = "";
     document.getElementById("registerPageMsg").innerText = "";
+}
+
+// 换浏览器时通过输入 GitHub Token 恢复云端配置
+async function recoverFromLoginToken() {
+    let token = document.getElementById("loginGithubToken").value.trim();
+    let msg = document.getElementById("loginGithubMsg");
+    if (!token) { msg.innerText = "请输入 GitHub Token"; return; }
+    msg.style.color = "#2980b9"; msg.innerText = "正在从云端拉取配置...";
+    try {
+        let resp = await fetch("https://api.github.com/repos/4162965/tu/contents/data/sync_config.json?ref=main", {
+            headers: { "Authorization": "token " + token }
+        });
+        if (!resp.ok) {
+            msg.style.color = "#e74c3c";
+            msg.innerText = resp.status === 401 ? "Token 无效或已过期" : ("加载失败: HTTP " + resp.status);
+            return;
+        }
+        let data = await resp.json();
+        let content = JSON.parse(atob(data.content));
+        syncManager.token = content.token || token;
+        syncManager.owner = content.owner || "4162965";
+        syncManager.repo = content.repo || "tu";
+        syncManager.branch = content.branch || "main";
+        syncManager.enabled = content.enabled !== undefined ? content.enabled : true;
+        syncManager.saveConfig();
+        msg.style.color = "#27ae60";
+        msg.innerText = "配置已恢复！仓库: " + syncManager.owner + "/" + syncManager.repo;
+        // 尝试从云端同步数据
+        if (syncManager.enabled) {
+            syncManager.syncFromCloud().then(() => {
+                loadData();
+                renderMine();
+            }).catch(() => {});
+        }
+    } catch(e) {
+        msg.style.color = "#e74c3c";
+        msg.innerText = "网络错误: " + e.message;
+    }
 }
 
 function doRegister() {
@@ -2446,13 +2664,13 @@ window.onload = function() {
         }
     });
     
-    // 定期从云端同步（每5分钟检查一次，仅在同步启用时）
+    // 定期从云端同步（每30秒检查一次，仅在同步启用时）
     setInterval(function() {
         if (syncManager.enabled && DEMO.currentUser) {
             console.log("定期云端同步...");
             syncManager.syncFromCloud().catch(e => console.error("定期同步失败:", e));
         }
-    }, 300000);
+    }, 30000);
     
     // 管理后台自动刷新定时器（每30秒检查一次）
     setInterval(function() {
