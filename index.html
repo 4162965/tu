@@ -480,29 +480,10 @@ const DEMO = {
     isSuperAdmin: false,
     userDisplayName: "张工",
     userJoinDate: "2026-05-24",
-    // 注册用户表（用户名 → {pwd, name}）
-    registeredUsers: {
-        "张三": { pwd: "123456", name: "张三" },
-        "李四": { pwd: "123456", name: "李四" },
-        "张工": { pwd: "123456", name: "张工" }
-    },
-    // 多用户数据（每个用户独立的 areas / locations）
-    allUserData: {
-        "admin": {
-            areas: ["六祖大道", "核心区"],
-            locations: {
-                "六祖大道": [
-                    { name: "位置1", records: [] },
-                    { name: "位置2", records: [] },
-                    { name: "位置3", records: [] }
-                ],
-                "核心区": [
-                    { name: "位置1", records: [] },
-                    { name: "位置2", records: [] }
-                ]
-            }
-        }
-    },
+    // 注册用户表（用户名 → {pwd, name}），从 D1 恢复或注册时动态填充
+    registeredUsers: {},
+    // 多用户数据（每个用户独立的 areas / locations），从 D1 恢复或注册时动态填充
+    allUserData: {},
     // 当前会话数据（登录后从 allUserData 加载）
     areas: [],
     locations: {},
@@ -548,9 +529,12 @@ const syncManager = {
     syncFromCloud: async function() {
         if (!this.enabled) return false;
         try {
+            console.log("[sync] 正在从 D1 拉取数据:", this.baseUrl + "/get?key=full_data");
             let resp = await fetch(this.baseUrl + "/get?key=full_data");
+            console.log("[sync] D1 响应状态:", resp.status, resp.ok);
             if (!resp.ok) return false;
             let result = await resp.json();
+            console.log("[sync] D1 返回数据大小:", JSON.stringify(result).length, "chars");
             if (result.value) {
                 let d = result.value;
                 // 检查本地是否有数据
@@ -566,15 +550,19 @@ const syncManager = {
                     if (d.tgProxy) DEMO.tgProxy = d.tgProxy;
                     if (d.adminData) DEMO.adminData = d.adminData;
                     saveDataToLocal();
+                    console.log("[sync] 已从 D1 恢复数据到本地 localStorage");
+                } else {
+                    console.log("[sync] 本地已有数据，跳过云端覆盖");
                 }
                 this.lastSyncTime = Date.now();
                 this.saveConfig();
-                console.log("云端数据同步成功");
+                console.log("[sync] 云端数据同步成功");
                 return true;
             }
+            console.log("[sync] D1 返回无 value 字段");
             return false;
         } catch(e) {
-            console.error("同步失败:", e);
+            console.error("[sync] 同步失败:", e.message, e);
             return false;
         }
     },
@@ -919,13 +907,23 @@ function doLoginFromPage() {
     if (syncManager.enabled) {
         msgEl.innerText = "正在同步云端数据...";
         msgEl.style.color = "#2980b9";
-        syncManager.syncFromCloud().then(() => {
-            loadCurrentUserData();
-            msgEl.innerText = "";
-            msgEl.style.color = "#e74c3c";
+        syncManager.syncFromCloud().then((ok) => {
+            if (ok) {
+                loadCurrentUserData();
+                msgEl.innerText = "";
+                msgEl.style.color = "#e74c3c";
+            } else {
+                // syncFromCloud 返回 false 说明无网络或无云端数据
+                if (!navigator.onLine) {
+                    msgEl.innerText = "当前无网络，使用本地数据";
+                } else {
+                    msgEl.innerText = "云端暂无数据，注册后即可使用";
+                }
+                msgEl.style.color = "#e67e22";
+            }
             showMainApp();
-        }).catch(() => {
-            msgEl.innerText = "";
+        }).catch((e) => {
+            msgEl.innerText = "同步异常: " + (e.message || "网络错误");
             msgEl.style.color = "#e74c3c";
             showMainApp();
         });
@@ -1740,6 +1738,26 @@ function renderAdmin() {
     let from = document.getElementById("adminDateFrom").value;
     let to = document.getElementById("adminDateTo").value;
     let site = document.getElementById("adminSiteFilter").value;
+
+    // 兜底：adminData 为空时从 allUserData 重建
+    if (DEMO.adminData.length === 0 && Object.keys(DEMO.allUserData).length > 0) {
+        for (let uid in DEMO.allUserData) {
+            let u = DEMO.allUserData[uid];
+            if (!u || !u.locations) continue;
+            for (let area in u.locations) {
+                u.locations[area].forEach(loc => {
+                    loc.records.forEach(r => {
+                        DEMO.adminData.push({
+                            user: uid, area: area, loc: loc.name,
+                            date: r.date || "", before: r.before || "",
+                            doing: r.doing || "", after: r.after || "",
+                            bName: r.bName || "", dName: r.dName || "", aName: r.aName || ""
+                        });
+                    });
+                });
+            }
+        }
+    }
 
     // 过滤：包含所有用户数据（包括超级管理员）
     let filtered = DEMO.adminData.filter(d => {
