@@ -549,7 +549,7 @@ const syncManager = {
             }
         } else {
             this.enabled = true;
-            this.token = "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";
+            this.token = "";
             this.owner = "4162965";
             this.repo = "tu";
             this.branch = "main";
@@ -560,35 +560,25 @@ const syncManager = {
         this.fetchCloudConfig();
     },
 
-    // 从 GitHub 拉取云端配置
+    // 从 GitHub 拉取云端配置（公开仓库无需 Token）
     fetchCloudConfig: async function() {
         if (!this.owner || !this.repo) return;
         try {
             let url = `https://api.github.com/repos/${this.owner}/${this.repo}/contents/data/sync_config.json?ref=${this.branch}`;
-            let headers = {};
-            if (this.token) headers["Authorization"] = "token " + this.token;
-            let resp = await fetch(url, { headers: headers });
-            if (!resp.ok) {
-                // Token 可能过期，尝试无 Token 重试（公开仓库可用）
-                if (resp.status === 401 && this.token) {
-                    delete headers["Authorization"];
-                    resp = await fetch(url);
-                }
-                if (!resp.ok) return;
+            let resp = await fetch(url);
+            if (resp.ok) {
+                let data = await resp.json();
+                let content = JSON.parse(atob(data.content));
+                // 云端配置覆盖本地
+                if (content.token) this.token = content.token;
+                if (content.owner) this.owner = content.owner;
+                if (content.repo) this.repo = content.repo;
+                if (content.branch) this.branch = content.branch;
+                if (content.enabled !== undefined) this.enabled = content.enabled;
+                this.saveConfig();
             }
-            let data = await resp.json();
-            let content = JSON.parse(atob(data.content));
-            // 云端配置覆盖本地
-            if (content.token) this.token = content.token;
-            if (content.owner) this.owner = content.owner;
-            if (content.repo) this.repo = content.repo;
-            if (content.branch) this.branch = content.branch;
-            if (content.enabled !== undefined) this.enabled = content.enabled;
-            this.saveConfig();
-            this.updateBadge();
-            console.log("已从云端加载同步配置");
         } catch(e) {
-            console.log("云端配置拉取失败（首次使用正常）:", e.message);
+            console.error("拉取云端配置失败:", e);
         }
     },
 
