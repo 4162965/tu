@@ -467,7 +467,7 @@ body{background:#f0f2f5;min-height:100vh;overflow-x:hidden;-webkit-text-size-adj
         <div class="form-group"><label>仓库名称</label><input type="text" class="form-input" id="syncRepo" placeholder="例如 my-data-repo"></div>
         <div class="form-group"><label>分支名称</label><input type="text" class="form-input" id="syncBranch" placeholder="默认 main"></div>
         <div class="form-hint" style="margin-top:8px;color:#e67e22">
-            提示：首次使用前请在 GitHub 仓库中创建 <code>data</code> 目录（可上传任意文件到该目录）。Token 会保存在本地浏览器中，仅管理员可配置。
+            提示：配置将保存到本地和 GitHub 仓库的 <code>data/sync_config.json</code>，换设备自动同步（公开仓库无需重复配置）。
         </div>
         <div id="syncTestMsg" style="font-size:10px;text-align:center;min-height:16px;margin-bottom:6px"></div>
         <div class="modal-actions">
@@ -555,6 +555,90 @@ const syncManager = {
             this.saveConfig();
         }
         this.updateBadge();
+        // 尝试从 GitHub 拉取云端配置（跨设备同步）
+        this.fetchCloudConfig();
+    },
+
+    // 从 GitHub 拉取云端配置
+    fetchCloudConfig: async function() {
+        if (!this.owner || !this.repo) return;
+        try {
+            let url = `https://api.github.com/repos/${this.owner}/${this.repo}/contents/data/sync_config.json?ref=${this.branch}`;
+            let headers = {};
+            if (this.token) headers["Authorization"] = "token " + this.token;
+            let resp = await fetch(url, { headers: headers });
+            if (!resp.ok) {
+                // Token 可能过期，尝试无 Token 重试（公开仓库可用）
+                if (resp.status === 401 && this.token) {
+                    delete headers["Authorization"];
+                    resp = await fetch(url);
+                }
+                if (!resp.ok) return;
+            }
+            let data = await resp.json();
+            let content = JSON.parse(atob(data.content));
+            // 云端配置覆盖本地
+            if (content.token) this.token = content.token;
+            if (content.owner) this.owner = content.owner;
+            if (content.repo) this.repo = content.repo;
+            if (content.branch) this.branch = content.branch;
+            if (content.enabled !== undefined) this.enabled = content.enabled;
+            this.saveConfig();
+            this.updateBadge();
+            console.log("已从云端加载同步配置");
+        } catch(e) {
+            console.log("云端配置拉取失败（首次使用正常）:", e.message);
+        }
+    },
+
+    // 上传配置到 GitHub
+    uploadConfig: async function() {
+        if (!this.owner || !this.repo) return;
+        try {
+            let configData = {
+                enabled: this.enabled,
+                token: this.token,
+                owner: this.owner,
+                repo: this.repo,
+                branch: this.branch
+            };
+            let content = JSON.stringify(configData, null, 2);
+            let base64Content = btoa(unescape(encodeURIComponent(content)));
+            let filePath = "data/sync_config.json";
+
+            // 先获取文件 SHA
+            let sha = null;
+            try {
+                let getResp = await fetch(`https://api.github.com/repos/${this.owner}/${this.repo}/contents/${filePath}?ref=${this.branch}`, {
+                    headers: { "Authorization": "token " + this.token }
+                });
+                if (getResp.ok) {
+                    let getData = await getResp.json();
+                    sha = getData.sha;
+                }
+            } catch(e) {}
+
+            let body = {
+                message: "更新同步配置",
+                content: base64Content,
+                branch: this.branch
+            };
+            if (sha) body.sha = sha;
+
+            let resp = await fetch(`https://api.github.com/repos/${this.owner}/${this.repo}/contents/${filePath}`, {
+                method: "PUT",
+                headers: {
+                    "Authorization": "token " + this.token,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(body)
+            });
+            if (resp.ok) {
+                console.log("同步配置已上传到云端");
+            }
+        } catch(e) {
+            console.log("上传配置到云端失败:", e.message);
+        }
     },
     
     // 保存配置
@@ -1002,6 +1086,10 @@ function saveSyncConfig() {
     syncManager.branch = branch || "main";
     
     syncManager.saveConfig();
+    // 有 Token 时才上传配置到云端
+    if (syncManager.token) {
+        syncManager.uploadConfig();
+    }
     
     let msg = document.getElementById("syncTestMsg");
     msg.style.color = "#27ae60";
@@ -2344,7 +2432,7 @@ window.onload = function() {
     document.getElementById("adminDateTo").value = todayStr();
     initLoginEnterKey();
     loadData();
-    syncManager.loadConfig();
+    // syncManager.loadConfig() 已在对象定义末尾调用，此处无需重复
     // 初始显示登录页面
     showLoginPage();
     
