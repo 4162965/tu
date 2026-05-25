@@ -2127,6 +2127,18 @@ window.onload = function() {
     // syncManager.loadConfig() 已在对象定义末尾调用，此处无需重复
     // 初始显示登录页面
     showLoginPage();
+
+    // 页面加载时后台预拉取云端数据（不等登录，提前恢复 localStorage）
+    if (syncManager.enabled) {
+        let raw = localStorage.getItem("gc_cm_data");
+        if (!raw || raw.length <= 2) {
+            console.log("[preload] 本地无数据，后台预拉取 D1...");
+            syncManager.syncFromCloud().then(ok => {
+                console.log("[preload] 预拉取完成:", ok);
+                if (ok) loadData();
+            }).catch(e => console.error("[preload] 预拉取失败:", e));
+        }
+    }
     
     // 监听 storage 事件实现跨标签页同步
     window.addEventListener('storage', function(e) {
