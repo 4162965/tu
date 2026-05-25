@@ -544,7 +544,7 @@ const syncManager = {
         if (badge) badge.style.display = "none";
     },
 
-    // 从云端拉取全部数据
+    // 从云端拉取全部数据（仅当本地无数据时恢复，否则以本地为准并上传）
     syncFromCloud: async function() {
         if (!this.enabled) return false;
         try {
@@ -553,12 +553,20 @@ const syncManager = {
             let result = await resp.json();
             if (result.value) {
                 let d = result.value;
-                if (d.registeredUsers) DEMO.registeredUsers = d.registeredUsers;
-                if (d.allUserData) DEMO.allUserData = d.allUserData;
-                if (d.tgToken) DEMO.tgToken = d.tgToken;
-                if (d.tgChatId) DEMO.tgChatId = d.tgChatId;
-                if (d.tgProxy) DEMO.tgProxy = d.tgProxy;
-                if (d.adminData) DEMO.adminData = d.adminData;
+                // 检查本地是否有数据
+                let raw = localStorage.getItem("gc_cm_data");
+                let hasLocalData = raw && raw.length > 2;
+                
+                if (!hasLocalData) {
+                    // 本地无数据，用云端恢复
+                    if (d.registeredUsers) DEMO.registeredUsers = d.registeredUsers;
+                    if (d.allUserData) DEMO.allUserData = d.allUserData;
+                    if (d.tgToken) DEMO.tgToken = d.tgToken;
+                    if (d.tgChatId) DEMO.tgChatId = d.tgChatId;
+                    if (d.tgProxy) DEMO.tgProxy = d.tgProxy;
+                    if (d.adminData) DEMO.adminData = d.adminData;
+                    saveDataToLocal();
+                }
                 this.lastSyncTime = Date.now();
                 this.saveConfig();
                 console.log("云端数据同步成功");
@@ -615,8 +623,8 @@ const syncManager = {
 // 初始化同步管理器
 syncManager.loadConfig();
 
-// 持久化存储
-function saveData() { 
+// 仅写入 localStorage（不触发云端同步）
+function saveDataToLocal() {
     localStorage.setItem("gc_cm_data", JSON.stringify({ 
         registeredUsers: DEMO.registeredUsers, 
         allUserData: DEMO.allUserData,
@@ -624,7 +632,12 @@ function saveData() {
         tgChatId: DEMO.tgChatId, 
         tgProxy: DEMO.tgProxy, 
         adminData: DEMO.adminData 
-    })); 
+    }));
+}
+
+// 持久化存储（本地 + 云端）
+function saveData() { 
+    saveDataToLocal();
     
     // 如果同步已启用，异步上传所有数据到云端（不仅仅是当前用户）
     if (syncManager.enabled) {
