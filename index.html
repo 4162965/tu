@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
 <title>项目图片整理系统</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="项目图库">
+<meta name="theme-color" content="#2980b9">
+<link rel="manifest" href="/tu/manifest.json">
+<link rel="apple-touch-icon" href="/tu/icon-192.png">
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;font-family:"Microsoft YaHei","PingFang SC","苹方","微软雅黑",sans-serif}
 body{background:#f0f2f5;min-height:100vh;overflow-x:hidden;-webkit-text-size-adjust:100%;-webkit-font-smoothing:antialiased}
@@ -2232,6 +2238,15 @@ function closeImageViewer() {
         document.removeEventListener('keydown', overlay._escHandler);
         delete overlay._escHandler;
     }
+}
+
+// 注册 PWA Service Worker
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/tu/sw.js').then(function(reg) {
+        console.log('[PWA] SW registered:', reg.scope);
+    }).catch(function(e) {
+        console.error('[PWA] SW failed:', e);
+    });
 }
 
 </script>
