@@ -113,7 +113,8 @@ body{background:#f0f2f5;min-height:100vh;overflow-x:hidden;-webkit-text-size-adj
 .loc-card .loc-no-img{width:100%;height:50px;display:flex;align-items:center;justify-content:center;background:#fff;border:1px dashed #d0d0d0;border-radius:4px;color:#888;font-size:9px}
 .loc-card .loc-upload-btn{position:relative;cursor:pointer;font-size:9px;color:#2980b9;background:#f0f5ff;padding:2px 5px;border-radius:3px;white-space:nowrap;width:100%;text-align:center}
 .loc-card .loc-upload-btn input{position:absolute;opacity:0;width:100%;height:100%;top:0;left:0;cursor:pointer}
-.loc-card .loc-del-btn{padding:3px 6px;border:none;border-radius:3px;cursor:pointer;font-size:9px;background:#ffeaea;color:#e74c3c;margin-top:4px;width:100%}
+.loc-card .loc-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.loc-card .loc-del-btn{padding:3px 8px;border:none;border-radius:3px;cursor:pointer;font-size:9px;background:#ffeaea;color:#e74c3c;flex-shrink:0}
 .loc-card .loc-del-btn:hover{background:#ffd6d6}
 .add-loc-area{text-align:center;margin-top:6px}
 .add-loc-area button{padding:5px 10px;border:none;border-radius:4px;cursor:pointer;font-size:11px;background:#27ae60;color:#fff}
@@ -491,7 +492,7 @@ body{background:#f0f2f5;min-height:100vh;overflow-x:hidden;-webkit-text-size-adj
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <script>
 // ==================== 全局数据 ====================
-const APP_VERSION = "v2.1-1003";  // 管理后台：鼠标hover放大图片 + 下载按钮
+const APP_VERSION = "v2.1-1008";  // 手机端添加位置移到区域底部居中
 const DEMO = {
     currentUser: null,
     isSuperAdmin: false,
@@ -1611,19 +1612,29 @@ function saveToDevice(file) {
     }
 }
 
-// 管理后台下载图片
+// 管理后台下载图片（fetch blob 避免浏览器弹窗询问）
 function downloadAdminImage(url, filename) {
-    try {
-        let a = document.createElement('a');
-        a.href = url;
-        a.download = filename || url.split('/').pop().split('?')[0] || 'photo.jpg';
-        a.target = '_blank';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-    } catch(e) {
-        window.open(url, '_blank');
-    }
+    let fname = filename || url.split('/').pop().split('?')[0] || 'photo.jpg';
+    fetch(url)
+        .then(res => res.blob())
+        .then(blob => {
+            let blobUrl = URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = fname;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+        })
+        .catch(() => {
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = fname;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        });
 }
 
 // ==================== 区域操作 ====================
@@ -1743,7 +1754,10 @@ function renderMine() {
             };
             cardsHtml +=
                 '<div class="loc-card">' +
-                    '<div class="loc-name">' + loc.name + '</div>' +
+                    '<div class="loc-header">' +
+                        '<div class="loc-name">' + loc.name + '</div>' +
+                        '<button class="loc-del-btn" onclick="deleteSingleLoc(\''+area+'\','+locIdx+')">删除位置</button>' +
+                    '</div>' +
                     '<div class="loc-imgs">' +
                         '<div class="loc-col"><span class="loc-label">施工前</span>' + makeMobileImg("before") +
                             '<label class="loc-upload-btn">选择文件<input type="file" accept="image/*" onchange="uploadDemo(this,\''+area+'\','+locIdx+',\'before\')"></label></div>' +
@@ -1752,7 +1766,6 @@ function renderMine() {
                         '<div class="loc-col"><span class="loc-label">施工后</span>' + makeMobileImg("after") +
                             '<label class="loc-upload-btn">选择文件<input type="file" accept="image/*" onchange="uploadDemo(this,\''+area+'\','+locIdx+',\'after\')"></label></div>' +
                     '</div>' +
-                    '<button class="loc-del-btn" onclick="deleteSingleLoc(\''+area+'\','+locIdx+')">删除位置</button>' +
                 '</div>';
         });
 
@@ -1762,17 +1775,15 @@ function renderMine() {
             '<div class="area-header">' +
                 '<div class="area-title">' + area + '</div>' +
                 '<div class="area-actions">' +
-                    '<button onclick="addLocation(\''+area+'\')">＋ 添加位置</button>' +
                     '<button class="btn-del-area" onclick="deleteArea(\''+area+'\')">删除区域</button>' +
                 '</div>' +
             '</div>' +
             '<div class="table-container"><table class="area-table"><thead><tr>' +
                 '<th style="width:100px">区域</th><th style="width:100px">位置</th><th style="width:120px">施工前</th><th style="width:120px">施工中</th><th style="width:120px">施工后</th><th style="width:60px">操作</th>' +
             '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
-            '<div class="add-loc-area"><button onclick="addLocation(\''+area+'\')">＋ 添加位置</button></div>' +
             '<div class="loc-cards">' + cardsHtml +
-                '<div class="mobile-add-loc"><button onclick="addLocation(\''+area+'\')">＋ 添加位置</button></div>' +
-            '</div>';
+            '</div>' +
+            '<div class="add-loc-area"><button onclick="addLocation(\''+area+'\')">＋ 添加位置</button></div>';
         container.appendChild(card);
     });
 
